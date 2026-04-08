@@ -1,0 +1,124 @@
+[project]
+name = "service-shortlink"
+description = "Service shortlink"
+readme = "README.md"
+requires-python = ">=3.14"
+dynamic = ["version"]
+
+#===============================================================================
+# Dependencies
+dependencies = [
+    "fastapi[standard]~=0.135",
+    "pydantic-settings~=2.13.1",
+    "pyyaml~=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "httpx~=0.28.1",
+    "pre-commit>=4.5.1",
+    "pytest~=9.0",
+    "pytest-cov~=7.1.0",
+    "ruff~=0.15",
+    "ty~=0.0",
+]
+
+#===============================================================================
+# uv configuration
+[tool.uv]
+package = false # Do not install as a package
+
+#===============================================================================
+# FastAPI configuration
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+#===============================================================================
+# Ruff configuration
+[tool.ruff]
+src = ["app"]
+
+# Same as Black.
+line-length = 100
+indent-width = 4
+
+# Assume Python 3.14
+target-version = "py314"
+
+#------------------------------------------------------------------------------
+# Linting configuration
+[tool.ruff.lint]
+exclude = []
+select = ["ALL"]
+ignore = [
+    "ANN401", # Ignore Any typehint
+    "ANN002", # Ignore typehint for *args
+    "ANN003", # Ignore typehint for **kwargs
+    "D",      # Ignore pydocstyle
+    "EM",     # Ignore flake8-errmsg
+    "FBT001", # Ignore boolean-type-hint-positional-argument
+    "FBT002", # Ignore boolean-default-value-positional-argument
+    "PTH123", # Ignore builtin-open
+    "TD",     # Ignore flake8-todos
+    "FIX",    # Ignore fixme comments
+    "ERA001", # TODO remove this for production, ignore commented code
+    "COM812", # flak8-commas missing-trailing-comma is ignored to avoid conflict with formatter which enforces trailing commas
+    "TRY003", # Ignore long messages in exceptions
+]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+unfixable = []
+
+fixable = ["ALL"]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+#------------------------------------------------------------------------------
+# ruff ignore per files
+[tool.ruff.lint.per-file-ignores]
+
+"app/tests/**" = [
+    "S101",    # Ignore usage of assert statements in tests
+    "ANN201",  # Ignore missing return type hints in tests
+    "PLR2004", # Ignore magic number in tests
+    "PLR0913", # Ignore too many arguments in function in tests
+]
+
+#------------------------------------------------------------------------------
+# Isort configuration
+[tool.ruff.lint.isort]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "fastapi",
+    "test",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+test = ["pytest"]
+fastapi = ["FastAPI"]
+
+#===============================================================================
+# ty configuration
+[tool.ty.environment]
+
+[tool.ty.src]
+exclude = []
+
+#===============================================================================
+# Pytest configuration
+[tool.pytest]
+pythonpath = ["app"]
+python_files = ["test_*.py"]
+addopts = []
+
+#==============================================================================
+# Coverage configuration
+[tool.coverage.run]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = ["if TYPE_CHECKING:"]
