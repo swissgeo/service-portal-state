@@ -25,11 +25,11 @@ PRE_COMMIT := $(UV_RUN) pre-commit
 FASTAPI := $(UV_RUN) fastapi
 
 # Docker variables?
-DOCKER_REGISTRY = 074597099015.dkr.ecr.eu-central-1.amazonaws.com
+DOCKER_REGISTRY := 074597099015.dkr.ecr.eu-central-1.amazonaws.com
 DOCKER_IMG_LOCAL_TAG := $(DOCKER_REGISTRY)/swissgeo/$(SERVICE_NAME):local-$(USER)-$(GIT_HASH_SHORT)
 
 # AWS variables
-AWS_DEFAULT_REGION = eu-central-1
+AWS_DEFAULT_REGION := eu-central-1
 
 # Env file for dockerrun, defaults to .env.local / .env
 ENV_FILE ?= $(if $(wildcard .env.local),.env.local,.env)

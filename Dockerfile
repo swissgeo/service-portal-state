@@ -78,4 +78,4 @@ ENV PORT=8080
 
 EXPOSE ${PORT}
 
-CMD ["fastapi", "run", "--proxy-headers", "--forwarded-allow-ips", "*", "app/main.py"]
+CMD ["fastapi", "run", "--proxy-headers", "app/main.py"]
