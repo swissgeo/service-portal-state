@@ -18,7 +18,7 @@ Service shortlink is the new short URL backend service for SWISSGEO.
 
 ## Development
 
-This service use [fastAPI](https://fastapi.tiangolo.com/) API framework.
+This service uses the [FastAPI](https://fastapi.tiangolo.com/) framework.
 
 ### Dependencies
 
