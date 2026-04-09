@@ -32,7 +32,7 @@ app.add_middleware(
 app.include_router(checker.router)
 
 
-# FastAPI only provide the openapi as json, so extent it to also provide the yaml output
+# FastAPI only provides the openapi as json, so extend it to also provide the yaml output
 @app.get("/openapi.yaml", include_in_schema=False)
 def openapi_yaml() -> Response:
     return Response(
