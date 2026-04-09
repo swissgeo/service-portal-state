@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class Checker(BaseModel):
     success: bool = Field(
-        description="True when the probe is successfull, false otherwise",
+        description="True when the probe is successful, false otherwise",
         examples=[True],
     )
     message: str = Field(
