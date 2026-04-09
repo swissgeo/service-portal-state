@@ -5,6 +5,6 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_checker() -> None:
+def test_checker():
     response = client.get("/checker")
     assert response.status_code == 200
