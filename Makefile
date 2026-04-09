@@ -63,7 +63,7 @@ setup:.env ## Create virtualenv with all packages for development
 	uv sync
 	$(PRE_COMMIT) install
 	# Start a new shell with the virtualenv activated and the .env file loaded into the environment
-	# variables. The later is required for django which reads the settings from the environment variables
+	# variables. The latter is required for django which reads the settings from the environment variables
 	uv run $$SHELL
 
 
