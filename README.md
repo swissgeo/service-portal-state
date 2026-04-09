@@ -91,7 +91,7 @@ uv add "fastapi[standard]~=v0.135"
 
 ### Testing
 
-This project uses `pytest` for testing, to start the test enter
+This project uses `pytest` for testing, to start the tests enter
 
 ```bash
 make test
