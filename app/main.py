@@ -1,7 +1,5 @@
-import yaml
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
 
 from app.api import checker
 from app.settings import settings
@@ -30,12 +28,3 @@ app.add_middleware(
 
 # Register routes
 app.include_router(checker.router)
-
-
-# FastAPI only provides the openapi as json, so extend it to also provide the yaml output
-@app.get("/openapi.yaml", include_in_schema=False)
-def openapi_yaml() -> Response:
-    return Response(
-        yaml.dump(app.openapi(), sort_keys=False),
-        media_type="application/yaml",
-    )
