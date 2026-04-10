@@ -59,7 +59,7 @@ ci: .env
 
 
 .PHONY: setup
-setup:.env ## Create virtualenv with all packages for development
+setup: .env ## Create virtualenv with all packages for development
 	uv sync
 	$(PRE_COMMIT) install
 	# Start a new shell with the virtualenv activated and the .env file loaded into the environment
