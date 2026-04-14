@@ -7,14 +7,20 @@ dynamic = ["version"]
 
 #===============================================================================
 # Dependencies
-dependencies = ["fastapi[standard]~=0.135", "pydantic-settings~=2.13.1"]
+dependencies = [
+    "boto3~=1.42",
+    "fastapi[standard]~=0.135",
+    "pydantic-settings~=2.13",
+]
 
 [dependency-groups]
 dev = [
+    "boto3-stubs[dynamodb]~=1.42",
     "httpx~=0.28.1",
+    "moto[dynamodb]~=5.1",
     "pre-commit>=4.5.1",
     "pytest~=9.0",
-    "pytest-cov~=7.1.0",
+    "pytest-cov~=7.1",
     "ruff~=0.15",
     "ty~=0.0",
 ]

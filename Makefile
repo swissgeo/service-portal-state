@@ -42,7 +42,7 @@ export UV_ENV_FILE := $(ENV_FILE)
 
 
 .PHONY: git-info
-git-info:
+git-info: ## Print the current version information
 	@echo "GIT_HASH=$(GIT_HASH)"
 	@echo "GIT_HASH_SHORT=$(GIT_HASH_SHORT)"
 	@echo "GIT_BRANCH=$(GIT_BRANCH)"
@@ -84,7 +84,7 @@ ci-check-format: format ## Check the format (CI)
 
 
 .PHONY: serve
-serve:
+serve: ## Serve the application for development
 	${FASTAPI} dev --port ${HTTP_PORT}
 
 
@@ -134,8 +134,33 @@ test: ## Run tests locally
 	$(TEST) --cov --cov-branch --cov-report=html
 
 
+docker-network:
+	@if ! docker network inspect shared_network_local >/dev/null 2>&1; then \
+		echo "Creating network shared_network_local"; \
+		docker network create shared_network_local; \
+	else \
+		echo "Network shared_network_local already exists"; \
+	fi
+
+.PHONY: start-moto
+start-moto: docker-network ## Run moto server locally and initialize resources (DynamoDB)
+	# reuse existing container if present, otherwise create it via compose
+	docker inspect moto-server >/dev/null 2>&1 && docker start moto-server || docker compose --env-file=${ENV_FILE} up -d moto-server
+	# run one-shot init containers to create DynamoDB table
+	docker compose --env-file=${ENV_FILE} up --remove-orphans init-dynamo
+
+
+.PHONY: stop-moto
+stop-moto: ## Stop the moto server container
+	docker stop moto-server
+
+
 .PHONY: help
 help: ## Display this help
 # automatically generate the help page based on the documentation after each make target
 # from https://gist.github.com/prwhite/8168133
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} \
+	/^[a-zA-Z0-9_.-]+:.*##/ { printf "%-15s %s\n", $$1, $$2 }' $(MAKEFILE_LIST) \
+	| sort \
+	| awk 'BEGIN { printf "\nUsage:\n  make \033[36m<target>\033[0m\n\n" } \
+	{ printf "  \033[36m%-15s\033[0m %s\n", $$1, substr($$0, index($$0,$$2)) }'
