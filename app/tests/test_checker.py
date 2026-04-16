@@ -1,10 +1,9 @@
-from fastapi.testclient import TestClient
+from typing import TYPE_CHECKING
 
-from app.main import app
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
-client = TestClient(app)
 
-
-def test_checker():
+def test_checker(client: TestClient):
     response = client.get("/checker")
     assert response.status_code == 200
