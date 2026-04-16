@@ -5,8 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
-from app.api import checker
+from app.api import checker, state
 from app.core.exceptions import register_exception_handlers
+from app.middlewares.canonical_hash import CanonicalHashMiddleware
 from app.settings import Settings, get_settings
 from app.version import __version__
 
@@ -61,15 +62,21 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
         settings = get_settings()
 
     app = FastAPI(
-        title="Service Shortlink",
-        summary="Create a short URL link",
+        title="Service State Portal",
+        summary="Save and retrieve application state for web-portal",
+        description="""This service allow the web-portal application to save its state and retrieve
+        it later on.
+        """,
         version=__version__,
-        contact={"name": "swissgeo", "url": "https://www.swissgeo.ch"},
+        contact={"name": "swissgeo", "url": "https://www.swissgeo.ch/infos"},
         license_info={
             "name": "BSD 3-Clause License",
             "identifier": "BSD-3-Clause",
         },
-        openapi_tags=[{"name": "internal", "description": "Internal APIs not for external uses"}],
+        openapi_tags=[
+            {"name": "Internal", "description": "Internal APIs not for external uses"},
+            {"name": "Application State", "description": "Application State Operations"},
+        ],
     )
     customize_openapi(app)
 
@@ -77,6 +84,7 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
 
     # Add middlewares
+    app.add_middleware(CanonicalHashMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -87,6 +95,7 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
 
     # Register routes
     app.include_router(checker.router)
+    app.include_router(state.router)
 
     return app
 

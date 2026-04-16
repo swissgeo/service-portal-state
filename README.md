@@ -5,7 +5,7 @@
 | develop | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiMndndVlNMWc1dUZOK09mT1VYOHh0MlpNbkI1YjJvYmJ6THMxMEd6Q0N4UWkybmIwN2FqNzFDWDArREhoZmxDVDVWVlNLRVNyc1lvRUg1UGZKN3p2L0trPSIsIml2UGFyYW1ldGVyU3BlYyI6ImwxV2pzTDhhOU9xdVNJNWIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop) |
 | main | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiMndndVlNMWc1dUZOK09mT1VYOHh0MlpNbkI1YjJvYmJ6THMxMEd6Q0N4UWkybmIwN2FqNzFDWDArREhoZmxDVDVWVlNLRVNyc1lvRUg1UGZKN3p2L0trPSIsIml2UGFyYW1ldGVyU3BlYyI6ImwxV2pzTDhhOU9xdVNJNWIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=main) |
 
-Service shortlink is the new short URL backend service for SWISSGEO.
+Service portal state is the new share application state backend service for SWISSGEO web-portal application.
 
 - [Development](#development)
   - [Dependencies](#dependencies)

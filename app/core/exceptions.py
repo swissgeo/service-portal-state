@@ -12,7 +12,9 @@ if TYPE_CHECKING:
     from starlette.responses import Response
 
 
-def validation_exception_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    _request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """
     Normalize all RequestValidationError outputs into a single JSON schema.
     """
@@ -26,7 +28,7 @@ def validation_exception_handler(_request: Request, exc: RequestValidationError)
     )
 
 
-def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+async def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
     """
     Normalize all HTTPException outputs into a single JSON schema.
     """
@@ -47,16 +49,16 @@ def http_exception_handler(_request: Request, exc: HTTPException) -> JSONRespons
             error=error,
             message=message,
             detail=detail,
-        ).model_dump(),
+        ).model_dump(exclude_none=True),
     )
 
 
-def unified_exception_handler(request: Request, exc: Exception) -> Response:
+async def unified_exception_handler(request: Request, exc: Exception) -> Response:
     if isinstance(exc, RequestValidationError):
-        return validation_exception_handler(request, exc)
+        return await validation_exception_handler(request, exc)
 
     if isinstance(exc, HTTPException):
-        return http_exception_handler(request, exc)
+        return await http_exception_handler(request, exc)
 
     return JSONResponse(
         status_code=500,

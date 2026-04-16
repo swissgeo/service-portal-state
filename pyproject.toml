@@ -1,6 +1,6 @@
 [project]
 name = "service-portal-state"
-description = "Service shortlink"
+description = "Web-portal state management service."
 readme = "README.md"
 requires-python = ">=3.14"
 dynamic = ["version"]
@@ -10,6 +10,7 @@ dynamic = ["version"]
 dependencies = [
     "aioboto3~=15.5.0",
     "fastapi[standard]~=0.135",
+    "orjson~=3.11.8",
     "pydantic-settings~=2.13",
 ]
 
@@ -23,6 +24,7 @@ dev = [
     "pytest-cov~=7.1",
     "ruff~=0.15",
     "ty~=0.0",
+    "types-aiobotocore[dynamodb]>=3.4.0",
 ]
 
 #===============================================================================
@@ -78,6 +80,13 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 #------------------------------------------------------------------------------
 # ruff ignore per files
 [tool.ruff.lint.per-file-ignores]
+
+"app/schemas/**" = [
+    # Pydantic schemas uses type annotations at runtime to generate the openapi
+    # and do the validation. Putting the type annotation in a TYPE_CHECKING
+    # block creates weird hard to debug code.
+    "TC003", # Ignore type annotation not in TYPE_CHECKING block
+]
 
 "app/tests/**" = [
     "S101",    # Ignore usage of assert statements in tests

@@ -19,8 +19,11 @@ class Settings(BaseSettings):
     cors_max_age: int = 600
 
     # AWS Settings
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
     aws_endpoint_url: str | None = None
     aws_dynamodb_table_name: str
+    aws_region: str
 
 
 # Settings are wrapped in an lru_cache to ensure a single, lazily-initialized instance
