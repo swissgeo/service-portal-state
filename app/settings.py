@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic import Field, PositiveInt
 from pydantic_settings import BaseSettings
 
@@ -11,4 +13,10 @@ class Settings(BaseSettings):
     cors_max_age: PositiveInt = Field(default=600, description="CORS max age")
 
 
-settings = Settings()
+# Settings are wrapped in an lru_cache to ensure a single, lazily-initialized instance
+# per process. This avoids re-parsing environment variables on every call, improves
+# performance, and ensures consistent configuration across the application while still
+# working cleanly with FastAPI dependency injection.
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

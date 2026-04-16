@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import checker
-from app.settings import settings
+from app.settings import get_settings
 from app.version import __version__
 
 app = FastAPI(
@@ -20,10 +20,10 @@ app = FastAPI(
 # Add middlewares
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_methods=settings.cors_method,
-    allow_headers=settings.cors_headers,
-    max_age=settings.cors_max_age,
+    allow_origins=get_settings().cors_origins,
+    allow_methods=get_settings().cors_method,
+    allow_headers=get_settings().cors_headers,
+    max_age=get_settings().cors_max_age,
 )
 
 # Register routes
