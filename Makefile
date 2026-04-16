@@ -144,6 +144,8 @@ docker-network:
 
 .PHONY: start-moto
 start-moto: docker-network ## Run moto server locally and initialize resources (DynamoDB)
+	# Prepare dynamodb-config
+	set -a && source .env && set +a && envsubst < dynamodb-local-config.json > .dynamodb-local-config.json
 	# reuse existing container if present, otherwise create it via compose
 	docker inspect moto-server >/dev/null 2>&1 && docker start moto-server || docker compose --env-file=${ENV_FILE} up -d moto-server
 	# run one-shot init containers to create DynamoDB table

@@ -15,20 +15,21 @@ services:
   init-dynamo:
     image: amazon/aws-cli
     entrypoint: ["/bin/sh", "-c"]
+    volumes:
+      - ./:/work
+    working_dir: /work
     command:
       - |
         until aws dynamodb list-tables --endpoint-url http://moto-server:5000 >/dev/null 2>&1; do
           echo "Waiting for moto-server..."; sleep 2
         done
-        if ! aws dynamodb describe-table --table-name "${DYNAMODB_TABLE_NAME}" --endpoint-url http://moto-server:5000 >/dev/null 2>&1; then
+        if ! aws dynamodb describe-table --table-name "${AWS_DYNAMODB_TABLE_NAME}" --endpoint-url http://moto-server:5000 >/dev/null 2>&1; then
           aws dynamodb create-table \
-            --table-name "${DYNAMODB_TABLE_NAME}" \
-            --attribute-definitions AttributeName=id,AttributeType=S AttributeName=version,AttributeType=S \
-            --key-schema AttributeName=id,KeyType=HASH AttributeName=version,KeyType=RANGE \
-            --provisioned-throughput ReadCapacityUnits=2,WriteCapacityUnits=1 \
+            --cli-input-json file://.dynamodb-local-config.json \
             --endpoint-url http://moto-server:5000
         fi
     environment:
+      - AWS_DYNAMODB_TABLE_NAME=${AWS_DYNAMODB_TABLE_NAME}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION}
