@@ -12,6 +12,9 @@ class Settings(BaseSettings):
 
     # NOTE: The following settings are automatically read from environment variables (environment
     # variable uses CONSTANT_CASE) and are parsed using json syntax.
+
+    root_path: str = "/api/state"
+
     # CORS settings
     cors_origins: list[str] = ["*"]
     cors_method: list[str] = ["*"]

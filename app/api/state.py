@@ -27,7 +27,7 @@ def check_version(version: int) -> None:
 
 
 @router.post(
-    "/api/v{version}/state",
+    "/v{version}",
     summary="Save Application State",
     response_model_exclude_none=True,
     response_model_exclude_unset=True,
@@ -48,7 +48,7 @@ async def post_app_state(
 
 
 @router.get(
-    "/api/v{version}/state/{state_id}",
+    "/v{version}/{state_id}",
     summary="Get Application State",
     response_model_exclude_none=True,
     response_model_exclude_unset=True,

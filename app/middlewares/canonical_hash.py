@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from starlette.responses import Response
 
 
-PATH_REGEX = re.compile(r"^/api/v\d+/state$")
+PATH_REGEX = re.compile(r"^/v\d+$")
 
 
 class CanonicalHashMiddleware(BaseHTTPMiddleware):

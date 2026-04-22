@@ -2,10 +2,11 @@ import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
 
-def test_save_app_state(client: TestClient):
+def test_save_app_state(app: FastAPI, client: TestClient):
     payload = {
         "state": {
             "map": {
@@ -25,7 +26,7 @@ def test_save_app_state(client: TestClient):
         },
     }
 
-    response = client.post("/api/v1/state", json=payload)
+    response = client.post(app.url_path_for("post_app_state", version=1), json=payload)
 
     # -------------------------
     # HTTP contract
@@ -50,16 +51,16 @@ def test_save_app_state(client: TestClient):
     # -------------------------
     # Determinism check
     # -------------------------
-    response2 = client.post("/api/v1/state", json=payload)
+    response2 = client.post(app.url_path_for("post_app_state", version=1), json=payload)
     assert response2.status_code == 200, (
         f"Unexpected response {response2.status_code}: {response2.json()}"
     )
     assert response2.json()["id"] == data["id"]
 
 
-def test_get_app_state(client: TestClient):
+def test_get_app_state(app: FastAPI, client: TestClient):
     state_id = "abcdef1234567891"
-    response = client.get(f"/api/v1/state/{state_id}")
+    response = client.get(app.url_path_for("get_app_state", version=1, state_id=state_id))
 
     assert response.status_code == 200, (
         f"Unexpected response {response.status_code}: {response.json()}"
@@ -71,9 +72,9 @@ def test_get_app_state(client: TestClient):
     assert data == {"state": {}}
 
 
-def test_get_app_state_bad_id(client: TestClient):
+def test_get_app_state_bad_id(app: FastAPI, client: TestClient):
     state_id = "abcdef123456"
-    response = client.get(f"/api/v1/state/{state_id}")
+    response = client.get(app.url_path_for("get_app_state", version=1, state_id=state_id))
 
     assert response.status_code == 400, (
         f"Unexpected response {response.status_code}: {response.json()}"
@@ -102,7 +103,7 @@ def test_get_app_state_bad_id(client: TestClient):
     }
 
     state_id = "123456678994563214"
-    response = client.get(f"/api/v1/state/{state_id}")
+    response = client.get(app.url_path_for("get_app_state", version=1, state_id=state_id))
 
     assert response.status_code == 400, (
         f"Unexpected response {response.status_code}: {response.json()}"

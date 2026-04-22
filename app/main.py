@@ -77,6 +77,7 @@ def app_factory(settings: Settings | None = None) -> FastAPI:
             {"name": "Internal", "description": "Internal APIs not for external uses"},
             {"name": "Application State", "description": "Application State Operations"},
         ],
+        root_path=settings.root_path,
     )
     customize_openapi(app)
 
