@@ -96,10 +96,6 @@ class SaveAppStateRequest(BaseModel):
     state: StateV1 = Field(description="State of the application to save")
 
 
-Version = Annotated[
-    int, Field(description="Major version of the application state object schema", examples=[1])
-]
-
 StateId = Annotated[
     str,
     Field(
