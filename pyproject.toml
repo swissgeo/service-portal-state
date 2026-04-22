@@ -1,5 +1,5 @@
 [project]
-name = "service-shortlink"
+name = "service-portal-state"
 description = "Service shortlink"
 readme = "README.md"
 requires-python = ">=3.14"

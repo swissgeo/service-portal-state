@@ -1061,7 +1061,7 @@ wheels = [
 ]
 
 [[package]]
-name = "service-shortlink"
+name = "service-portal-state"
 source = { virtual = "." }
 dependencies = [
     { name = "boto3" },

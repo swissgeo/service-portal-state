@@ -5,7 +5,7 @@
 FROM python:3.14-slim-bookworm AS base
 ENV USER=swissgeo
 ENV GROUP=swissgeo
-ENV INSTALL_DIR=/opt/service-shortlink
+ENV INSTALL_DIR=/opt/service-portal-state
 
 RUN apt-get -qq update > /dev/null \
     && apt-get -qq clean \

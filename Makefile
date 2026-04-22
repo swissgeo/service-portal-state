@@ -2,7 +2,7 @@ SHELL = /bin/bash
 
 .DEFAULT_GOAL := help
 
-SERVICE_NAME := service-shortlink
+SERVICE_NAME := service-portal-state
 HTTP_PORT := 8000
 
 CURRENT_DIR := $(shell pwd)
