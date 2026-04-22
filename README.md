@@ -2,8 +2,8 @@
 
 | Branch  | Status    |
 |---------|-----------|
-| develop | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiS1BkNmk4OGdudUZZTW5tM0J1NDdsc3h2L1c3ZXR5d09lRTRCZm82Q2FHWHRHKzRoT2JHU1lmbEY5a3cremtCWVdMWHFEcEtSVVY1QTZOSUx3dnNUWGhJPSIsIml2UGFyYW1ldGVyU3BlYyI6IjVya0JjTnJPVFBtcmtpeXYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop) |
-| main | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiS1BkNmk4OGdudUZZTW5tM0J1NDdsc3h2L1c3ZXR5d09lRTRCZm82Q2FHWHRHKzRoT2JHU1lmbEY5a3cremtCWVdMWHFEcEtSVVY1QTZOSUx3dnNUWGhJPSIsIml2UGFyYW1ldGVyU3BlYyI6IjVya0JjTnJPVFBtcmtpeXYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=main) |
+| develop | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiMndndVlNMWc1dUZOK09mT1VYOHh0MlpNbkI1YjJvYmJ6THMxMEd6Q0N4UWkybmIwN2FqNzFDWDArREhoZmxDVDVWVlNLRVNyc1lvRUg1UGZKN3p2L0trPSIsIml2UGFyYW1ldGVyU3BlYyI6ImwxV2pzTDhhOU9xdVNJNWIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop) |
+| main | ![Build Status](https://codebuild.eu-central-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiMndndVlNMWc1dUZOK09mT1VYOHh0MlpNbkI1YjJvYmJ6THMxMEd6Q0N4UWkybmIwN2FqNzFDWDArREhoZmxDVDVWVlNLRVNyc1lvRUg1UGZKN3p2L0trPSIsIml2UGFyYW1ldGVyU3BlYyI6ImwxV2pzTDhhOU9xdVNJNWIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=main) |
 
 Service shortlink is the new short URL backend service for SWISSGEO.
 
