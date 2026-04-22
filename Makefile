@@ -29,10 +29,10 @@ DOCKER_REGISTRY := 074597099015.dkr.ecr.eu-central-1.amazonaws.com
 DOCKER_IMG_LOCAL_TAG := $(DOCKER_REGISTRY)/swissgeo/$(SERVICE_NAME):local-$(USER)-$(GIT_HASH_SHORT)
 
 # AWS variables
-AWS_DEFAULT_REGION := eu-central-1
+AWS_REGION := eu-central-1
 
-# Env file for dockerrun, defaults to .env.local / .env
-ENV_FILE ?= $(if $(wildcard .env.local),.env.local,.env)
+# Env file for dockerrun, defaults to .env.default / .env
+ENV_FILE ?= $(if $(wildcard .env.default),.env.default,.env)
 # export the env file so that uv picks it up in all recipes below
 export UV_ENV_FILE := $(ENV_FILE)
 
@@ -144,6 +144,8 @@ docker-network:
 
 .PHONY: start-moto
 start-moto: docker-network ## Run moto server locally and initialize resources (DynamoDB)
+	# Prepare dynamodb-config
+	set -a && source .env && set +a && envsubst < dynamodb-local-config.json > .dynamodb-local-config.json
 	# reuse existing container if present, otherwise create it via compose
 	docker inspect moto-server >/dev/null 2>&1 && docker start moto-server || docker compose --env-file=${ENV_FILE} up -d moto-server
 	# run one-shot init containers to create DynamoDB table
