@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -9,6 +10,9 @@ if TYPE_CHECKING:
 
     from starlette.requests import Request
     from starlette.responses import Response
+
+
+PATH_REGEX = re.compile(r"^/api/v\d+/state$")
 
 
 class CanonicalHashMiddleware(BaseHTTPMiddleware):
@@ -40,7 +44,7 @@ class CanonicalHashMiddleware(BaseHTTPMiddleware):
         # Only hash POST /api/state JSON requests
         if (
             request.method == "POST"
-            and request.url.path == "/api/state"
+            and PATH_REGEX.fullmatch(request.url.path)
             and request.headers.get("content-type", "").startswith("application/json")
         ):
             raw = await request.body()

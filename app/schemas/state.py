@@ -1,23 +1,9 @@
 import math
-import re
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from anyio.functools import lru_cache
-from pydantic import AnyUrl, BaseModel, Field, PositiveFloat, field_validator
-
-SEMVER_REGEX = re.compile(r"^\d+\.\d+$")
-
-
-@lru_cache
-def get_app_state_versions() -> list[str]:
-    """Application State object supported versions.
-
-    List all supported version for the state object.
-    """
-    return ["1.0"]
-
+from pydantic import AnyUrl, BaseModel, Field, PositiveFloat
 
 CoordinateX = Annotated[
     PositiveFloat, Field(description="Coordinate x in LV95 / EPSG:2056 (meters)")
@@ -28,21 +14,27 @@ CoordinateY = Annotated[
 
 
 class MapState(BaseModel):
-    center: tuple[CoordinateX, CoordinateY] = Field(
-        default=(2660000, 1190000),
+    center: tuple[CoordinateX, CoordinateY] | None = Field(
+        default=None,
         description="Center of the map in [x, y] coordinates in lv95 / EPSG:2056",
         examples=[(2660000, 1190000)],
     )
-    zoom: float = Field(default=1, description="Zoom level of the map", examples=[1], ge=1, le=13)
-    rotation: float = Field(
-        default=0, description="Rotation of the map in radian", examples=[0], ge=0, le=2 * math.pi
+    zoom: float | None = Field(
+        default=None, description="Zoom level of the map", examples=[1], ge=1, le=13
+    )
+    rotation: float | None = Field(
+        default=None,
+        description="Rotation of the map in radian",
+        examples=[0],
+        ge=0,
+        le=2 * math.pi,
     )
 
 
 class TimeDimension(BaseModel):
-    current_value: datetime | Literal["current"] = Field(
+    current_value: datetime | Literal["current"] | None = Field(
         alias="currentValue",
-        default="current",
+        default=None,
         description="Current selected time value",
         examples=["current"],
     )
@@ -73,13 +65,17 @@ class LayerState(BaseModel):
         description="Type of the layer (e.g. dataset, gpx, kml)",
         examples=["dataset"],
     )
-    is_visible: bool = Field(
+    is_visible: bool | None = Field(
         alias="isVisible",
-        default=True,
+        default=None,
         description="Whether the layer is visible on the map",
     )
-    opacity: float = Field(
-        default=1, description="Opacity of the layer (between 0 and 1)", examples=[0.75], ge=0, le=1
+    opacity: float | None = Field(
+        default=None,
+        description="Opacity of the layer (between 0 and 1)",
+        examples=[0.75],
+        ge=0,
+        le=1,
     )
     dimensions: LayerDimensionsState = Field(
         default_factory=LayerDimensionsState,
@@ -96,26 +92,13 @@ class StateV1(BaseModel):
     )
 
 
-StateVersion = Annotated[
-    str,
-    Field(
-        description="Version of the state object: `major.minor`",
-        examples=["1.0"],
-    ),
-]
-
-
 class SaveAppStateRequest(BaseModel):
-    version: StateVersion
     state: StateV1 = Field(description="State of the application to save")
 
-    @field_validator("version")
-    @classmethod
-    def validate_semver(cls, v: str) -> str:
-        if SEMVER_REGEX.fullmatch(v) is None:
-            raise ValueError("Version must be in the format X.Y (e.g. 1.2)")
-        return v
 
+Version = Annotated[
+    int, Field(description="Major version of the application state object schema", examples=[1])
+]
 
 StateId = Annotated[
     str,
@@ -150,8 +133,6 @@ class SaveAppStateResponse(BaseModel):
 
 
 class GetAppStateResponse(BaseModel):
-    id: StateId
-    version: StateVersion
     state: StateV1
     deprecated: bool = Field(
         description="When true the application state version is deprecated",
