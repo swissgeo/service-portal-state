@@ -92,9 +92,7 @@ class StateV1(BaseModel):
     )
 
 
-class SaveAppStateRequest(BaseModel):
-    state: StateV1 = Field(description="State of the application to save")
-
+State = StateV1
 
 StateId = Annotated[
     str,
@@ -105,6 +103,14 @@ StateId = Annotated[
         max_length=16,
     ),
 ]
+
+
+class StateItem(BaseModel):
+    state: State
+
+
+class SaveAppStateRequest(BaseModel):
+    state: State = Field(description="State of the application to save")
 
 
 WarningType = Annotated[
@@ -128,10 +134,13 @@ class SaveAppStateResponse(BaseModel):
     warning: WarningType = ""
 
 
-class GetAppStateResponse(BaseModel):
-    state: StateV1
+class GetAppStateResponse(StateItem):
     deprecated: bool = Field(
         description="When true the application state version is deprecated",
         default=False,
     )
     warning: WarningType = ""
+
+    @classmethod
+    def from_db_state_item(cls, state: StateItem) -> GetAppStateResponse:
+        return cls.model_validate(state.model_dump(by_alias=True))

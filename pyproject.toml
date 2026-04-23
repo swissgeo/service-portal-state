@@ -12,19 +12,21 @@ dependencies = [
     "fastapi[standard]~=0.135",
     "orjson~=3.11.8",
     "pydantic-settings~=2.13",
+    "types-aiobotocore[dynamodb]>=3.4.0",
 ]
 
 [dependency-groups]
 dev = [
     "boto3-stubs[dynamodb]~=1.42",
     "httpx~=0.28.1",
-    "moto[dynamodb]~=5.1",
+    "moto[dynamodb,server]~=5.1",
     "pre-commit>=4.5.1",
     "pytest~=9.0",
+    "pytest-asyncio>=1.3.0",
     "pytest-cov~=7.1",
+    "pytest-xdist>=3.8.0",
     "ruff~=0.15",
     "ty~=0.0",
-    "types-aiobotocore[dynamodb]>=3.4.0",
 ]
 
 #===============================================================================
@@ -68,6 +70,14 @@ ignore = [
     "ERA001", # TODO remove this for production, ignore commented code
     "COM812", # flak8-commas missing-trailing-comma is ignored to avoid conflict with formatter which enforces trailing commas
     "TRY003", # Ignore long messages in exceptions
+
+    # Pydantic schemas uses type annotations at runtime to generate the openapi
+    # and do the validation. Putting the type annotation in a TYPE_CHECKING
+    # block creates weird hard to debug code.
+    # Same for fastAPI dependencies which also use type annotations at runtime.
+    "TC003", # Ignore type annotation not in TYPE_CHECKING block
+    "TC002", # Ignore type annotation not in TYPE_CHECKING block for third party import
+    "TC001", # Ignore type annotation not in TYPE_CHECKING block for first party import
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -81,12 +91,6 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # ruff ignore per files
 [tool.ruff.lint.per-file-ignores]
 
-"app/schemas/**" = [
-    # Pydantic schemas uses type annotations at runtime to generate the openapi
-    # and do the validation. Putting the type annotation in a TYPE_CHECKING
-    # block creates weird hard to debug code.
-    "TC003", # Ignore type annotation not in TYPE_CHECKING block
-]
 
 "app/tests/**" = [
     "S101",    # Ignore usage of assert statements in tests
@@ -110,7 +114,7 @@ section-order = [
 
 [tool.ruff.lint.isort.sections]
 test = ["pytest"]
-fastapi = ["FastAPI"]
+fastapi = ["fastapi", "pydantic"]
 
 #===============================================================================
 # ty configuration
@@ -129,7 +133,7 @@ addopts = []
 #==============================================================================
 # Coverage configuration
 [tool.coverage.run]
-omit = ["*/tests/*"]
+omit = ["*/tests/*", "version.py"]
 
 [tool.coverage.report]
-exclude_lines = ["if TYPE_CHECKING:"]
+exclude_lines = ["if TYPE_CHECKING:", "pragma: no cover"]

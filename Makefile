@@ -32,7 +32,7 @@ DOCKER_IMG_LOCAL_TAG := $(DOCKER_REGISTRY)/swissgeo/$(SERVICE_NAME):local-$(USER
 AWS_REGION := eu-central-1
 
 # Env file for dockerrun, defaults to .env.default / .env
-ENV_FILE ?= $(if $(wildcard .env.default),.env.default,.env)
+ENV_FILE ?= $(if $(wildcard .env),.env,.env.default)
 # export the env file so that uv picks it up in all recipes below
 export UV_ENV_FILE := $(ENV_FILE)
 
@@ -90,7 +90,7 @@ serve: ## Serve the application for development
 
 .PHONY: dockerlogin
 dockerlogin: ## Login to the AWS Docker Registry (ECR)
-	aws --profile swisstopo-swissgeo-builder ecr get-login-password --region $(AWS_DEFAULT_REGION) | docker login --username AWS --password-stdin $(DOCKER_REGISTRY)
+	aws --profile swisstopo-swissgeo-builder ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(DOCKER_REGISTRY)
 
 
 .PHONY: dockerbuild
@@ -126,12 +126,12 @@ lint: ## Run the linter and type checker on the code base
 
 .PHONY: test-ci
 test-ci: ## Run tests in the CI
-	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml
+	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml --cov-fail-under 100 -n 10
 
 
 .PHONY: test
 test: ## Run tests locally
-	$(TEST) --cov --cov-branch --cov-report=html
+	$(TEST) --cov --cov-branch --cov-report=html --cov-fail-under 100 -n 10
 
 
 docker-network:

@@ -1,14 +1,12 @@
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.core.hashing import canonical_hash_bytes_96
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from starlette.requests import Request
-    from starlette.responses import Response
+# NOTE: we cannot use the fastAPI middleware decorator syntax here because of circular imports.
 
 
 class CanonicalHashMiddleware(BaseHTTPMiddleware):
@@ -40,7 +38,7 @@ class CanonicalHashMiddleware(BaseHTTPMiddleware):
         # Only hash POST /api/state JSON requests
         if (
             request.method == "POST"
-            and request.url.path == "/"
+            and request.url.path == f"{request.scope.get('root_path', '')}/"
             and request.headers.get("content-type", "").startswith("application/json")
         ):
             raw = await request.body()

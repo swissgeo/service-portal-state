@@ -1,5 +1,9 @@
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
+
+import aioboto3
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from app.api import checker, state
 from app.core.exceptions import register_exception_handlers
 from app.middlewares.canonical_hash import CanonicalHashMiddleware
-from app.settings import Settings, get_settings
+from app.settings import get_settings
 from app.version import __version__
 
 logger = logging.getLogger(__name__)
@@ -23,7 +27,7 @@ def customize_openapi(app: FastAPI) -> None:
 
     def custom_openapi() -> dict[str, Any]:
         if app.openapi_schema:
-            return app.openapi_schema
+            return app.openapi_schema  # pragma: no cover
 
         app.openapi_schema = get_openapi(
             title=app.title,
@@ -48,57 +52,57 @@ def customize_openapi(app: FastAPI) -> None:
     app.openapi = custom_openapi  # ty:ignore[invalid-assignment]
 
 
-def app_factory(settings: Settings | None = None) -> FastAPI:
-    """
-    Factory function to create a FastAPI app instance with the given settings.
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    # Startup code (runs before application startup)
 
-    This allows for flexible app creation with different configurations, which is
-    especially useful for testing or when running multiple instances with different
-    settings in the same process.
+    settings = get_settings()
 
-    If no settings are provided, it will use the default settings from get_settings().
-    """
-    if settings is None:
-        settings = get_settings()
+    logger.info("Initializing DynamoDB session")
+    app.state.dynamodb_session = aioboto3.Session(region_name=settings.aws_region)
 
-    app = FastAPI(
-        title="Service State Portal",
-        summary="Save and retrieve application state for web-portal",
-        description="""This service allow the web-portal application to save its state and retrieve
-        it later on.
-        """,
-        version=__version__,
-        contact={"name": "swissgeo", "url": "https://www.swissgeo.ch/infos"},
-        license_info={
-            "name": "BSD 3-Clause License",
-            "identifier": "BSD-3-Clause",
-        },
-        openapi_tags=[
-            {"name": "Internal", "description": "Internal APIs not for external uses"},
-            {"name": "Application State", "description": "Application State Operations"},
-        ],
-        root_path=settings.root_path,
-    )
-    customize_openapi(app)
-
-    # Register exceptions handlers
-    register_exception_handlers(app)
-
-    # Add middlewares
-    app.add_middleware(CanonicalHashMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_methods=settings.cors_method,
-        allow_headers=settings.cors_headers,
-        max_age=settings.cors_max_age,
-    )
-
-    # Register routes
-    app.include_router(checker.router)
-    app.include_router(state.router)
-
-    return app
+    logger.info("Startup tasks completed")
+    yield
+    # Shutdown code (runs after application shutdown)
+    logger.info("Shutdown tasks completed")
 
 
-app = app_factory()
+settings = get_settings()
+
+app = FastAPI(
+    title="Service State Portal",
+    summary="Save and retrieve application state for web-portal",
+    description="""This service allow the web-portal application to save its state and retrieve
+    it later on.
+    """,
+    version=__version__,
+    contact={"name": "swissgeo", "url": "https://www.swissgeo.ch/infos"},
+    license_info={
+        "name": "BSD 3-Clause License",
+        "identifier": "BSD-3-Clause",
+    },
+    openapi_tags=[
+        {"name": "Internal", "description": "Internal APIs not for external uses"},
+        {"name": "Application State", "description": "Application State Operations"},
+    ],
+    lifespan=lifespan,
+    root_path=settings.root_path,
+)
+customize_openapi(app)
+
+# Register exceptions handlers
+register_exception_handlers(app)
+
+# Add middlewares
+app.add_middleware(CanonicalHashMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=settings.cors_method,
+    allow_headers=settings.cors_headers,
+    max_age=settings.cors_max_age,
+)
+
+# Register routes
+app.include_router(checker.router)
+app.include_router(state.router)
