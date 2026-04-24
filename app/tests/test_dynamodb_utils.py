@@ -29,8 +29,7 @@ class UserModel(BaseModel):
 # ------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_dynamodb_to_basemodel_full() -> None:
+def test_dynamodb_to_basemodel_full() -> None:
     dynamodb_data: dict[str, Any] = {
         "id": {"N": "1"},
         "name": {"S": "John"},
@@ -40,7 +39,7 @@ async def test_dynamodb_to_basemodel_full() -> None:
         "metadata": {"M": {"key": {"S": "value"}}},
     }
 
-    result: UserModel = await dynamodb_to_basemodel(UserModel, dynamodb_data)
+    result: UserModel = dynamodb_to_basemodel(UserModel, dynamodb_data)
 
     assert isinstance(result, UserModel)
     assert result.id == 1
@@ -51,8 +50,7 @@ async def test_dynamodb_to_basemodel_full() -> None:
     assert result.metadata == {"key": "value"}
 
 
-@pytest.mark.asyncio
-async def test_dynamodb_to_basemodel_invalid() -> None:
+def test_dynamodb_to_basemodel_invalid() -> None:
     bad_data: dict[str, Any] = {
         "id": {"S": "not-an-int"},  # should fail validation
     }
@@ -60,7 +58,7 @@ async def test_dynamodb_to_basemodel_invalid() -> None:
     with pytest.raises(
         ValueError, match="Error validating data against UserModel: 5 validation errors"
     ):
-        await dynamodb_to_basemodel(UserModel, bad_data)
+        dynamodb_to_basemodel(UserModel, bad_data)
 
 
 # ------------------------------------------------------------------
@@ -68,8 +66,7 @@ async def test_dynamodb_to_basemodel_invalid() -> None:
 # ------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_basemodel_to_dynamodb_full() -> None:
+def test_basemodel_to_dynamodb_full() -> None:
     model: UserModel = UserModel(
         id=1,
         name="John",
@@ -79,7 +76,7 @@ async def test_basemodel_to_dynamodb_full() -> None:
         metadata={"key": "value"},
     )
 
-    result: dict[str, Any] = await basemodel_to_dynamodb(model)
+    result: dict[str, Any] = basemodel_to_dynamodb(model)
 
     assert result["id"] == {"N": "1"}
     assert result["name"] == {"S": "John"}
@@ -89,15 +86,14 @@ async def test_basemodel_to_dynamodb_full() -> None:
     assert result["metadata"]["M"]["key"] == {"S": "value"}
 
 
-@pytest.mark.asyncio
-async def test_basemodel_to_dynamodb_excludes_none() -> None:
+def test_basemodel_to_dynamodb_excludes_none() -> None:
     class Model(BaseModel):
         a: int
         b: str | None = None
 
     model: Model = Model(a=1)
 
-    result: dict[str, Any] = await basemodel_to_dynamodb(model)
+    result: dict[str, Any] = basemodel_to_dynamodb(model)
 
     assert "a" in result
     assert "b" not in result
@@ -108,23 +104,20 @@ async def test_basemodel_to_dynamodb_excludes_none() -> None:
 # ------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_get_key_string_pk() -> None:
-    result: dict = await get_key("id", "abc")
+def test_get_key_string_pk() -> None:
+    result: dict = get_key("id", "abc")
 
     assert result == {"id": {"S": "abc"}}
 
 
-@pytest.mark.asyncio
-async def test_get_key_int_pk() -> None:
-    result: dict = await get_key("id", 123)
+def test_get_key_int_pk() -> None:
+    result: dict = get_key("id", 123)
 
     assert result == {"id": {"N": "123"}}
 
 
-@pytest.mark.asyncio
-async def test_get_key_with_sort_key_string() -> None:
-    result: dict = await get_key("pk", "a", "sk", "b")
+def test_get_key_with_sort_key_string() -> None:
+    result: dict = get_key("pk", "a", "sk", "b")
 
     assert result == {
         "pk": {"S": "a"},
@@ -132,32 +125,28 @@ async def test_get_key_with_sort_key_string() -> None:
     }
 
 
-@pytest.mark.asyncio
-async def test_get_key_with_sort_key_int() -> None:
-    result: dict = await get_key("pk", 1, "sk", 2)
+def test_get_key_with_sort_key_int() -> None:
+    result: dict = get_key("pk", 1, "sk", 2)
 
     assert result == {
         "pk": {"N": "1"},
-        "sk": {"N": 2},
+        "sk": {"N": "2"},
     }
 
 
-@pytest.mark.asyncio
-async def test_get_key_missing_sort_value() -> None:
+def test_get_key_missing_sort_value() -> None:
     with pytest.raises(ValueError, match="No value provided for sort key"):
-        await get_key("pk", "a", "sk", None)
+        get_key("pk", "a", "sk", None)
 
 
-@pytest.mark.asyncio
-async def test_get_key_invalid_pk_type() -> None:
-    with pytest.raises(TypeError):
-        await get_key("pk", 1.5)  # float not allowed  # ty:ignore[invalid-argument-type]
+def test_get_key_invalid_pk_type() -> None:
+    with pytest.raises(TypeError, match="Float types are not supported"):
+        get_key("pk", 1.5)  # ty:ignore[invalid-argument-type]
 
 
-@pytest.mark.asyncio
-async def test_get_key_invalid_sk_type() -> None:
-    with pytest.raises(TypeError):
-        await get_key("pk", "a", "sk", 1.5)  # ty:ignore[invalid-argument-type]
+def test_get_key_invalid_sk_type() -> None:
+    with pytest.raises(TypeError, match="Float types are not supported"):
+        get_key("pk", "a", "sk", 1.5)  # ty:ignore[invalid-argument-type]
 
 
 # ------------------------------------------------------------------
@@ -165,8 +154,7 @@ async def test_get_key_invalid_sk_type() -> None:
 # ------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_nested_structures_roundtrip() -> None:
+def test_nested_structures_roundtrip() -> None:
     class NestedModel(BaseModel):
         data: dict[str, Any]
 
@@ -177,7 +165,7 @@ async def test_nested_structures_roundtrip() -> None:
         }
     )
 
-    dynamodb: dict[str, Any] = await basemodel_to_dynamodb(model)
-    result: NestedModel = await dynamodb_to_basemodel(NestedModel, dynamodb)
+    dynamodb: dict[str, Any] = basemodel_to_dynamodb(model)
+    result: NestedModel = dynamodb_to_basemodel(NestedModel, dynamodb)
 
     assert result == model

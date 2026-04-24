@@ -38,8 +38,8 @@ class StateService:
         try:
             await self._client.put_item(
                 TableName=self._table_name,
-                Item=await basemodel_to_dynamodb(
-                    basemodel=DBStateItem.from_state_item(
+                Item=basemodel_to_dynamodb(
+                    DBStateItem.from_state_item(
                         state_id=state_id, full_hash=full_hash, version=1, state=state
                     )
                 ),
@@ -85,7 +85,7 @@ class StateService:
         try:
             await self._client.put_item(
                 TableName=self._table_name,
-                Item=await basemodel_to_dynamodb(basemodel=db_item),
+                Item=basemodel_to_dynamodb(db_item),
             )
 
         except ClientError:  # pragma: no cover
@@ -95,16 +95,13 @@ class StateService:
     async def _get_db_item(self, state_id: str) -> DBStateItem | None:
         response = await self._client.get_item(
             TableName=self._table_name,
-            Key=await get_key(primary_key_name="id", primary_key_value=state_id),
+            Key=get_key(primary_key_name="id", primary_key_value=state_id),
         )
 
         if "Item" not in response:
             return None
 
-        return await dynamodb_to_basemodel(
-            basemodel=DBStateItem,
-            dynamodb_data=response["Item"],
-        )
+        return dynamodb_to_basemodel(DBStateItem, response["Item"])
 
     async def _check_for_collision(self, state_id: str, full_hash: str) -> None:
         existing_item = await self._get_db_item(state_id=state_id)
