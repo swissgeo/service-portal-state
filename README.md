@@ -14,6 +14,7 @@ Service portal state is the new share application state backend service for SWIS
   - [Pre-Commit Hooks](#pre-commit-hooks)
   - [Updating Packages](#updating-packages)
   - [Testing](#testing)
+    - [DynamoDB mocking](#dynamodb-mocking)
 - [OpenAPI](#openapi)
 
 ## Development
@@ -34,6 +35,12 @@ To create and activate a virtual Python environment with all dependencies instal
 
 ```bash
 make setup
+```
+
+Then run the moto-server (used for DynamoDB)
+
+```bash
+make start-moto
 ```
 
 Then run the server
@@ -96,6 +103,24 @@ This project uses `pytest` for testing, to start the tests enter
 ```bash
 make test
 ```
+
+#### DynamoDB mocking
+
+We use a Moto server to mock all DynamoDB calls, enabling simpler unit tests without needing to
+manually mock each DynamoDB API interaction. For each test function, a new Moto server is started
+on a random port to ensure proper test isolation and support concurrent execution.
+
+Additionally, we provide two fixtures to directly mock DynamoDB `get_item` and `put_item` methods,
+allowing us to test specific behaviors such as collisions:
+
+- `mock_dynamodb_client_get_item`
+- `mock_dynamodb_client_put_item`
+
+> [!NOTE]
+> We use a Moto server instead of the `@mock_aws` decorator because the decorator is not thread-safe.  
+> Since `aioboto3` uses threads under the hood to provide asynchronous behavior on top of `boto3`,
+> this can lead to unpredictable test behavior.  
+> Running a dedicated Moto server per test ensures proper isolation and reliable concurrency.
 
 ## OpenAPI
 
