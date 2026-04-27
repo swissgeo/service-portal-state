@@ -32,6 +32,17 @@ class Settings(BaseSettings):
     aws_dynamodb_table_name: str
     aws_region: str
 
+    # OTEL configuration
+    otel_sdk_disable: bool = False
+    otel_enable_boto: bool = True
+    otel_enable_fastapi: bool = True
+    otel_enable_logging: bool = True
+    otel_enable_otlp_exporter: bool = True
+    otel_exporter_otlp_endpoint: str = "http://localhost:4317"
+    otel_exporter_otlp_headers: str = ""
+    otel_exporter_otlp_insecure: bool = False
+    otel_enable_console_exporter: bool = False
+
     # In order to support dotenv file with string list directly loaded by pydantic-settings or
     # by docker run --env-file, we MUST set the list as comma separated string in the .env file
     # or environment variable, e.g. CORS_ORIGINS=test.com,localhost and then use a field validator
