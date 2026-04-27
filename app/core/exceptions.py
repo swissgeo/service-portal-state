@@ -1,5 +1,7 @@
 from http import HTTPStatus
-from typing import TYPE_CHECKING
+
+from starlette.requests import Request
+from starlette.responses import Response
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -7,16 +9,17 @@ from fastapi.responses import JSONResponse
 
 from app.schemas.errors import ErrorResponse
 
-if TYPE_CHECKING:
-    from starlette.requests import Request
-    from starlette.responses import Response
-
 
 async def validation_exception_handler(
     _request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     """
-    Normalize all RequestValidationError outputs into a single JSON schema.
+    Normalize all RequestValidationError outputs into a single JSON schema with
+    HTTP 400 Bad Request status code.
+
+    By default FastAPI returns a 422 Unprocessable Entity status code for
+    validation errors, but for consistency with other APIs we return
+    400 Bad Request instead since the client request is invalid in either case.
     """
     return JSONResponse(
         status_code=400,
@@ -83,6 +86,6 @@ def register_exception_handlers(app: FastAPI) -> None:
     # registered separately.
     #
     # Order does not matter here; Starlette resolves the most specific matching type.
+    app.add_exception_handler(Exception, unified_exception_handler)
     app.add_exception_handler(RequestValidationError, unified_exception_handler)
     app.add_exception_handler(HTTPException, unified_exception_handler)
-    app.add_exception_handler(Exception, unified_exception_handler)

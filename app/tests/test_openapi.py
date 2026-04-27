@@ -1,7 +1,4 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 
 
 def test_get_openapi_json(client: TestClient):
