@@ -37,7 +37,14 @@ def test_get_app_empty_state(client: TestClient, db_state_item_empty: dict):
 
 @pytest.mark.parametrize(
     ("origin", "method"),
-    [("http://test.com", "GET"), ("http://localhost", "POST"), ("https://hello.com", "POST")],
+    [
+        ("http://test.com", "GET"),
+        ("http://test.com", "POST"),
+        ("http://localhost:3000", "GET"),
+        ("http://localhost:3000", "POST"),
+        ("https://hello.com", "GET"),
+        ("https://hello.com", "POST"),
+    ],
 )
 def test_cors_allow_origin_header(
     client: TestClient, db_state_item_empty: dict, origin: str, method: str
@@ -72,11 +79,11 @@ def test_cors_allow_origin_header(
     ("origin", "method"),
     [
         ("https://test.com", "GET"),
-        ("http://test.com.hack", "POST"),
-        ("localhost", "DELETE"),
-        ("hello.com.hack", "GET"),
-        ("http://test.com", "DELETE"),
         ("http://test.com", "PUT"),
+        ("http://test.com", "DELETE"),
+        ("http://test.com.hack", "POST"),
+        ("http://localhost:3000", "DELETE"),
+        ("hello.com.hack", "GET"),
     ],
 )
 def test_cors_non_allow_origin_header(

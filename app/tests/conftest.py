@@ -106,7 +106,8 @@ def settings(moto_server: str) -> Settings:
     """Fixture to provide application settings for testing, overriding the DynamoDB endpoint URL."""
     return Settings(
         _env_file=None,  # ty:ignore[unknown-argument]
-        cors_origins=["http://test.com", "http://localhost", "https://hello.com"],
+        cors_origins=["http://test.com", "https://hello.com"],
+        cors_origin_regex=r"http://localhost:\d+",
         aws_endpoint_url=moto_server,
         aws_dynamodb_table_name="test-table",
         aws_region="eu-central-1",

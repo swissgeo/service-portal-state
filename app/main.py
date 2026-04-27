@@ -98,6 +98,7 @@ app.add_middleware(CanonicalHashMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_methods=settings.cors_method,
     allow_headers=settings.cors_headers,
     max_age=settings.cors_max_age,
