@@ -32,8 +32,7 @@ async def post_app_state(
 ) -> SaveAppStateResponse:
     """Save the given application state"""
 
-    state_id = request.state.payload_hash[1]
-    full_hash = request.state.payload_hash[0]
+    full_hash, state_id = request.state.payload_hash
 
     if await app.save_app_state(
         state_id=state_id,
