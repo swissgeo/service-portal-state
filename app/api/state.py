@@ -17,12 +17,17 @@ router = APIRouter()
 
 OPENAPI__TAG = "Application State"
 
+# TODO re-asses the usage of such metric
 meter = metrics.get_meter(__name__)
 save_200_meter = meter.create_counter(
-    "save.duplicate", unit="1", description="Counts of save state that already exists"
+    "portal.state.save.duplicate", unit="1", description="Counts of save state that already exists"
 )
-save_201_meter = meter.create_counter("save.new", unit="1", description="Counts of new save state")
-get_meter = meter.create_counter("get", unit="1", description="Counts of get sate event")
+save_201_meter = meter.create_counter(
+    "portal.state.save.new", unit="1", description="Counts of new save state"
+)
+get_meter = meter.create_counter(
+    "portal.state.get", unit="1", description="Counts of get sate event"
+)
 
 
 @router.post(

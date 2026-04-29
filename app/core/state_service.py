@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
 meter = metrics.get_meter(__name__)
-collision_meter = meter.create_counter("collision", unit="1", description="Hash collision counter")
+collision_meter = meter.create_counter(
+    "portal.state.collision", unit="1", description="Hash collision counter"
+)
 
 
 class StateService:
