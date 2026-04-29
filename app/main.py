@@ -12,10 +12,13 @@ from fastapi.openapi.utils import get_openapi
 from app.api import checker, state
 from app.core.exceptions import register_exception_handlers
 from app.middlewares.canonical_hash import CanonicalHashMiddleware
+from app.otel import initialize
 from app.settings import get_settings
 from app.version import __version__
 
 logger = logging.getLogger(__name__)
+
+settings = get_settings()
 
 
 def customize_openapi(app: FastAPI) -> None:
@@ -67,8 +70,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     logger.info("Shutdown tasks completed")
 
 
-settings = get_settings()
-
 app = FastAPI(
     title="Service State Portal",
     summary="Save and retrieve application state for web-portal",
@@ -107,3 +108,7 @@ app.add_middleware(
 # Register routes
 app.include_router(checker.router)
 app.include_router(state.router)
+
+
+# Setup OTEL instrumentation
+initialize(settings, app)

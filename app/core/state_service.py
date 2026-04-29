@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from botocore.exceptions import ClientError
+from opentelemetry import metrics, trace
 from types_aiobotocore_dynamodb import DynamoDBClient
 
 from fastapi import Depends
@@ -13,6 +14,13 @@ from app.schemas.state import StateId, StateItem
 from app.settings import SettingsDep
 
 logger = logging.getLogger(__name__)
+
+tracer = trace.get_tracer(__name__)
+
+meter = metrics.get_meter(__name__)
+collision_meter = meter.create_counter(
+    "portal.state.collision", unit="1", description="Hash collision counter"
+)
 
 
 class StateService:
@@ -78,6 +86,7 @@ class StateService:
 
         return db_item
 
+    @tracer.start_as_current_span("update-last-accessed")
     async def update_last_accessed(self, db_item: DBStateItem) -> None:
         logger.debug("Updating last accessed for state with id=%s", db_item.id)
         db_item.last_accessed = datetime.now(tz=UTC)
@@ -112,6 +121,7 @@ class StateService:
             )  # pragma: no cover
 
         if existing_item.full_hash != full_hash:
+            collision_meter.add(1, {"state.full_hash": full_hash, "state.id": state_id})
             logger.exception(
                 "Collision detected for state_id=%s: existing hash=%s, new hash=%s",
                 state_id,
