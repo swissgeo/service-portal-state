@@ -105,7 +105,8 @@ dockerbuild: ## Create a docker image
 
 .PHONY: dockerpush
 dockerpush: dockerbuild ## Push to the docker registry
-	docker push $(DOCKER_IMG_LOCAL_TAG)
+	set -o pipefail; \
+	docker push $(DOCKER_IMG_LOCAL_TAG) 2>&1 | grep --color=always -E "tag invalid: .*|$$"
 
 
 .PHONY: dockerrun
