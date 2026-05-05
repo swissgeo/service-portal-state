@@ -16,6 +16,8 @@ Service portal state is the new shared application state backend service for SWI
   - [Testing](#testing)
     - [DynamoDB mocking](#dynamodb-mocking)
 - [OpenAPI](#openapi)
+- [Observability](#observability)
+  - [Testing OTEL configuration](#testing-otel-configuration)
 
 ## Development
 
@@ -136,3 +138,31 @@ And then open:
 
 - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for Swagger
 - [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) for Redoc
+
+## Observability
+
+The service is setup with Opentelemetry logging, tracing and metrics.
+
+By default when working locally with the FastAPI dev server (`make serve`), opentelemetry is disabled
+and logs are nicely printed on the console.
+
+See [Opentelemetry Python Instrumentation](https://opentelemetry.io/docs/languages/python/instrumentation/)
+for more information on how to use tracing and metics in the application code.
+
+### Testing OTEL configuration
+
+If you want to test the OTEL configuration, where all logs, trace and metrics are sent via opentelemetry,
+you can use the environment variable defined in `.env.otel` and start the application using docker
+
+```bash
+cp .env.otel .env
+make dockerrun
+```
+
+Alternatively you can also test the configuration that uses both OTEL logs and standard python
+console handler log in parallel.
+
+```bash
+cp .env.otel-console .env
+make dockerrun
+```

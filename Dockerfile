@@ -73,9 +73,9 @@ LABEL version=$VERSION
 WORKDIR ${INSTALL_DIR}/
 USER ${USER}
 
-# fastapi use the environment variable PORT for the HTTP port
-ENV PORT=8080
+# expose the default port of uvicorn
+EXPOSE 8000
 
-EXPOSE ${PORT}
-
-CMD ["fastapi", "run", "--proxy-headers", "app/main.py"]
+# Here we use uvicorn directly in order to configure its logging configuration file
+# This can be done by using the CMD arg during docker run.
+ENTRYPOINT ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0"]

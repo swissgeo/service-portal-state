@@ -34,14 +34,31 @@ class Settings(BaseSettings):
 
     # OTEL configuration
     otel_sdk_disable: bool = False
+    # Instrumentation
     otel_enable_boto: bool = True
     otel_enable_fastapi: bool = True
-    otel_enable_logging: bool = True
+    # OTLP exporter
     otel_enable_otlp_exporter: bool = True
     otel_exporter_otlp_endpoint: str = "http://localhost:4317"
     otel_exporter_otlp_headers: str = ""
     otel_exporter_otlp_insecure: bool = False
+    # Console exporter
     otel_enable_console_exporter: bool = False
+    # Metrics
+    otel_enable_metrics: bool = False
+
+    # configure exporters
+    otel_trace_exporters: list[str] = ["otlp"]
+    otel_metrics_exporters: list[str] = ["otlp"]
+    otel_logging_exporters: list[str] = ["otlp"]
+
+    # Logging
+    # When using the fastapi dev server, we can configure logging inside our application for better
+    # user experience. Otherwise logging is configured by uvicorn
+    logging_enable_dev_server_logging: bool = False
+    logging_config_file: str | None = None
+    # Overwrite the handlers logging level from the one in the logging configuration
+    logging_handlers_level: str | None = None
 
     # In order to support dotenv file with string list directly loaded by pydantic-settings or
     # by docker run --env-file, we MUST set the list as comma separated string in the .env file
@@ -51,7 +68,15 @@ class Settings(BaseSettings):
     # correctly because each system handle quoting differently:
     # - docker would require => CORS_ORIGINS=["*"] (with quotes) to parse it as a list,
     # - pydantic-settings would require => CORS_ORIGINS='["*"]'
-    @field_validator("cors_origins", "cors_method", "cors_headers", mode="before")
+    @field_validator(
+        "cors_origins",
+        "cors_method",
+        "cors_headers",
+        "otel_trace_exporters",
+        "otel_metrics_exporters",
+        "otel_logging_exporters",
+        mode="before",
+    )
     @classmethod
     def parse_list(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, list):

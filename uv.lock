@@ -1352,19 +1352,6 @@ wheels = [
 ]
 
 [[package]]
-name = "opentelemetry-instrumentation-logging"
-version = "0.62b1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/25/a30e0160cb3654bb63936be16d8ffe5f4a658d10bec0d5509cca3c74f103/opentelemetry_instrumentation_logging-0.62b1.tar.gz", hash = "sha256:997359d29ce06cb3768677387469431d0484b2450b5c35d7f02361431d3de338", size = 18969, upload-time = "2026-04-24T13:22:54.275Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/e4/216d1c7ff9c10815a8587ecbca0b570596921f001d1e2c2903c6f19e2e90/opentelemetry_instrumentation_logging-0.62b1-py3-none-any.whl", hash = "sha256:969330216d1ae02f4e10f1a030566ae758114caead020817192e6a02c6d1a0e1", size = 17488, upload-time = "2026-04-24T13:22:00.726Z" },
-]
-
-[[package]]
 name = "opentelemetry-propagator-aws-xray"
 version = "1.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2065,10 +2052,10 @@ dependencies = [
     { name = "opentelemetry-instrumentation-asgi" },
     { name = "opentelemetry-instrumentation-botocore" },
     { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-instrumentation-logging" },
     { name = "opentelemetry-sdk" },
     { name = "orjson" },
     { name = "pydantic-settings" },
+    { name = "pyyaml" },
     { name = "types-aiobotocore", extra = ["dynamodb"] },
 ]
 
@@ -2094,10 +2081,10 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-asgi", specifier = "==0.62b1" },
     { name = "opentelemetry-instrumentation-botocore", specifier = "==0.62b1" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = "==0.62b1" },
-    { name = "opentelemetry-instrumentation-logging", specifier = "==0.62b1" },
     { name = "opentelemetry-sdk", specifier = "~=1.41" },
     { name = "orjson", specifier = "~=3.11" },
     { name = "pydantic-settings", specifier = "~=2.13" },
+    { name = "pyyaml", specifier = "~=6.0" },
     { name = "types-aiobotocore", extras = ["dynamodb"], specifier = "~=3.4" },
 ]
 

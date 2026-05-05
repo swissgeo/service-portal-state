@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .DEFAULT_GOAL := help
 
 SERVICE_NAME := service-portal-state
-HTTP_PORT := 8000
+HTTP_PORT ?= 8000
 
 CURRENT_DIR := $(shell pwd)
 
@@ -23,6 +23,7 @@ RUFF := $(UV_RUN) ruff
 TY := $(UV_RUN) ty
 PRE_COMMIT := $(UV_RUN) pre-commit
 FASTAPI := $(UV_RUN) fastapi
+UVICORN := $(UV_RUN) uvicorn
 
 # Docker variables?
 DOCKER_REGISTRY := 074597099015.dkr.ecr.eu-central-1.amazonaws.com
@@ -36,6 +37,9 @@ ENV_FILE ?= $(if $(wildcard .env),.env,.env.default)
 # export the env file so that uv picks it up in all recipes below
 export UV_ENV_FILE := $(ENV_FILE)
 
+-include $(ENV_FILE)
+
+CONTAINER_LOGGING_CONFIG := /app/logging-config.yaml
 
 .env:
 	cp .env.default .env
@@ -113,10 +117,11 @@ dockerpush: dockerbuild ## Push to the docker registry
 dockerrun: dockerbuild ## Run the locally built docker image
 	docker run \
 		-it \
-		--env PORT="$(HTTP_PORT)" \
+		--env LOGGING_CONFIG_FILE=$(CONTAINER_LOGGING_CONFIG) \
 		--env-file=${ENV_FILE} \
 		--net=host \
-		$(DOCKER_IMG_LOCAL_TAG)
+		-v $(PWD)/$(LOGGING_CONFIG_FILE):$(CONTAINER_LOGGING_CONFIG):ro \
+		$(DOCKER_IMG_LOCAL_TAG) --log-config $(CONTAINER_LOGGING_CONFIG) --port $(HTTP_PORT)
 
 
 .PHONY: lint
@@ -142,6 +147,7 @@ docker-network:
 	else \
 		echo "Network shared_network_local already exists"; \
 	fi
+
 
 .PHONY: start-moto
 start-moto: docker-network ## Run moto server locally and initialize resources (DynamoDB)
