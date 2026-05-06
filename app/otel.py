@@ -27,6 +27,8 @@ from fastapi import FastAPI
 
 from app.settings import Settings, get_settings
 
+_resource = Resource.create({"service.name": "service-portal-state"})
+
 
 def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
     if settings.otel_sdk_disable:
@@ -34,15 +36,11 @@ def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
 
     # Log provider can be used together with logging instrumentation to send logs to the OTEL
     # configured exporter in the correct OTEL format
-    log_provider = LoggerProvider(
-        resource=Resource.create({"service.name": "service-portal-state"})
-    )
+    log_provider = LoggerProvider(resource=_resource)
     set_logger_provider(log_provider)
 
     # Trace provider
-    trace_provider = TracerProvider(
-        resource=Resource.create({"service.name": "service-portal-state"})
-    )
+    trace_provider = TracerProvider(resource=_resource)
     trace.set_tracer_provider(trace_provider)
 
     return log_provider, trace_provider
@@ -135,7 +133,7 @@ if settings.otel_enable_metrics and not settings.otel_sdk_disable:
     metric_readers = [PeriodicExportingMetricReader(exporter) for exporter in metric_exporters]
 
     # Sets the global default meter provider
-    metrics.set_meter_provider(MeterProvider(metric_readers=metric_readers))
+    metrics.set_meter_provider(MeterProvider(metric_readers=metric_readers, resource=_resource))
 
 
 def initialize_instrumentation(settings: Settings, app: FastAPI) -> None:
