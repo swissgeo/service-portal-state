@@ -79,7 +79,7 @@ def _get_exporters(
                     endpoint=settings.otel_exporter_otlp_endpoint,
                     headers=settings.otel_exporter_otlp_headers,
                     insecure=settings.otel_exporter_otlp_insecure,
-                )  # pragma: no-cover
+                )
             )
 
         # Logs OTLP exporter
@@ -110,7 +110,7 @@ def _get_exporters(
 settings = get_settings()
 
 # Providers
-log_provider, trace_provider = _get_providers()
+log_provider, trace_provider = _get_providers(settings)
 
 # Exporters
 logs_exporters, span_exporters, metric_exporters = _get_exporters(settings)
