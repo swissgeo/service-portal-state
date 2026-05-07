@@ -30,7 +30,7 @@ from app.settings import Settings, get_settings
 _resource = Resource.create({"service.name": "service-portal-state"})
 
 
-def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
+def _get_providers(settings: Settings) -> tuple[LoggerProvider | None, TracerProvider | None]:
     if settings.otel_sdk_disable:
         return None, None
 
