@@ -4,7 +4,7 @@ from typing import Annotated
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from fastapi import Depends
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 
 class Settings(BaseSettings):
@@ -82,6 +82,38 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return v.split(",")
+
+    @model_validator(mode="after")
+    def validate_otel_exporters(self) -> Settings:
+        allowed_exporters = {"otlp", "console"}
+
+        exporters_fields = (
+            "otel_trace_exporters",
+            "otel_metrics_exporters",
+            "otel_logging_exporters",
+        )
+
+        for field_name in exporters_fields:
+            exporters = getattr(self, field_name)
+
+            invalid = set(exporters) - allowed_exporters
+            if invalid:
+                raise ValueError(
+                    f"{field_name} contains invalid exporter(s): {sorted(invalid)}. "
+                    "Allowed values are: otlp, console."
+                )
+
+            if "otlp" in exporters and not self.otel_enable_otlp_exporter:
+                raise ValueError(
+                    f"{field_name} contains 'otlp' but otel_enable_otlp_exporter is false."
+                )
+
+            if "console" in exporters and not self.otel_enable_console_exporter:
+                raise ValueError(
+                    f"{field_name} contains 'console' but otel_enable_console_exporter is false."
+                )
+
+        return self
 
 
 # Settings are wrapped in an lru_cache to ensure a single, lazily-initialized instance
