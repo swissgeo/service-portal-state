@@ -112,7 +112,7 @@ def settings(moto_server: str) -> Settings:
         aws_dynamodb_table_name="test-table",
         aws_region="eu-central-1",
         root_path="",
-        otel_sdk_disable=True,
+        otel_sdk_disabled=True,
     )
 
 

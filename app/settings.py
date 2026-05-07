@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     aws_region: str
 
     # OTEL configuration
-    otel_sdk_disable: bool = False
+    otel_sdk_disabled: bool = False
     # Instrumentation
     otel_enable_boto: bool = True
     otel_enable_fastapi: bool = True
