@@ -9,7 +9,9 @@ def test_defaults(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_DYNAMODB_TABLE_NAME", "test-table")
     monkeypatch.setenv("AWS_REGION", "eu-west-1")
 
-    settings = Settings()  # ty:ignore[missing-argument]
+    settings = Settings(
+        _env_file=None,  # ty:ignore[unknown-argument]
+    )  # ty:ignore[missing-argument]
 
     assert settings.root_path == "/api/wps/v1/state"
     assert settings.cors_origins == []
@@ -23,7 +25,9 @@ def test_env_overrides_simple_values(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_REGION", "us-east-1")
     monkeypatch.setenv("ROOT_PATH", "/api")
 
-    settings = Settings()  # ty:ignore[missing-argument]
+    settings = Settings(
+        _env_file=None,  # ty:ignore[unknown-argument]
+    )  # ty:ignore[missing-argument]
 
     assert settings.root_path == "/api"
     assert settings.aws_dynamodb_table_name == "my-table"
@@ -37,7 +41,9 @@ def test_parse_list_from_comma_separated_string(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("CORS_METHOD", "GET,POST,PUT")
     monkeypatch.setenv("CORS_HEADERS", "Authorization,Content-Type")
 
-    settings = Settings()  # ty:ignore[missing-argument]
+    settings = Settings(
+        _env_file=None,  # ty:ignore[unknown-argument]
+    )  # ty:ignore[missing-argument]
 
     assert settings.cors_origins == ["https://example.com", "http://localhost"]
     assert settings.cors_method == ["GET", "POST", "PUT"]
@@ -49,6 +55,7 @@ def test_parse_list_when_already_list(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_REGION", "eu-west-1")
 
     settings = Settings(
+        _env_file=None,  # ty:ignore[unknown-argument]
         cors_origins=["a.com", "b.com"],
         cors_method=["GET"],
         cors_headers=["X-Test"],
@@ -65,3 +72,49 @@ def test_missing_required_fields(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("AWS_REGION", raising=False)
     with pytest.raises(ValidationError):
         Settings(_env_file=None)  # ty:ignore[missing-argument, unknown-argument]
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "otel_trace_exporters",
+        "otel_metrics_exporters",
+        "otel_logging_exporters",
+    ],
+)
+def test_each_otel_exporter_field_rejects_invalid_value(field_name: str):
+    with pytest.raises(ValidationError, match=field_name):
+        Settings(
+            _env_file=None,  # ty:ignore[unknown-argument]
+            **{field_name: ["invalid"]},  # ty:ignore[invalid-argument-type]
+        )
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "otel_trace_exporters",
+        "otel_metrics_exporters",
+        "otel_logging_exporters",
+    ],
+)
+def test_each_otel_exporter_field_rejects_non_enabled_value_value(field_name: str):
+    with pytest.raises(ValidationError, match=field_name):
+        Settings(
+            _env_file=None,  # ty:ignore[unknown-argument]
+            otel_enable_otlp_exporter=False,
+            **{field_name: ["otlp"]},  # ty:ignore[invalid-argument-type]
+        )
+
+    default_exporters = {
+        "otel_trace_exporters": ["otlp"],
+        "otel_metrics_exporters": ["otlp"],
+        "otel_logging_exporters": ["otlp"],
+    }
+    with pytest.raises(ValidationError, match=field_name):
+        Settings(
+            _env_file=None,  # ty:ignore[unknown-argument]
+            otel_enable_otlp_exporter=True,
+            otel_enable_console_exporter=False,
+            **(default_exporters | {field_name: ["console"]}),  # ty:ignore[invalid-argument-type]
+        )
