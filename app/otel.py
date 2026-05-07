@@ -103,37 +103,44 @@ def _get_exporters(
     return logs_exporters, span_exporters, metric_exporters
 
 
-# ------------------------------------------------------------------------------
-# NOTE: The log Provider needs to be initialize at import time in order to allow
-# uvicorn to use the get_otel_handler() from the logging.dictConfig().
+def _setup_log_processors(
+    provider: LoggerProvider | None,
+    exporters: list[LogRecordExporter],
+) -> None:
+    if provider is None:
+        return
 
-settings = get_settings()
+    for exporter in exporters:
+        provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 
-# Providers
-log_provider, trace_provider = _get_providers(settings)
 
-# Exporters
-logs_exporters, span_exporters, metric_exporters = _get_exporters(settings)
+def _setup_span_processors(
+    provider: TracerProvider | None,
+    exporters: list[SpanExporter],
+) -> None:
+    if provider is None:
+        return
 
-# Setup log processor and exporter
-if log_provider:
-    for exporter in logs_exporters:
-        log_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
+    for exporter in exporters:
+        provider.add_span_processor(BatchSpanProcessor(exporter))
 
-# Setup span processor and exporter (tracing)
-if trace_provider:
-    for exporter in span_exporters:
-        trace_provider.add_span_processor(BatchSpanProcessor(exporter))
 
-# Setup metrics
-if settings.otel_enable_metrics and not settings.otel_sdk_disabled:
+def _setup_metrics(settings: Settings, exporters: list[MetricExporter]) -> MeterProvider | None:
+    if settings.otel_sdk_disabled or not settings.otel_enable_metrics:
+        return None
+
     # The periodic exporter can be configured via environment variable:
     # OTEL_METRIC_EXPORT_INTERVAL [ms] => default to 60'000
     # OTEL_METRIC_EXPORT_TIMEOUT [ms] => default to 30'000
-    metric_readers = [PeriodicExportingMetricReader(exporter) for exporter in metric_exporters]
+    metric_readers = [PeriodicExportingMetricReader(exporter) for exporter in exporters]
 
-    # Sets the global default meter provider
-    metrics.set_meter_provider(MeterProvider(metric_readers=metric_readers, resource=_resource))
+    meter_provider = MeterProvider(
+        metric_readers=metric_readers,
+        resource=_resource,
+    )
+    metrics.set_meter_provider(meter_provider)
+
+    return meter_provider
 
 
 def initialize_instrumentation(settings: Settings, app: FastAPI) -> None:
@@ -145,6 +152,47 @@ def initialize_instrumentation(settings: Settings, app: FastAPI) -> None:
         AiobotocoreInstrumentor().instrument()
     if settings.otel_enable_fastapi:
         FastAPIInstrumentor.instrument_app(app)
+
+
+def shutdown_otel(settings: Settings) -> None:
+    """Flush and shutdown OTEL providers/processors on application shutdown."""
+    if settings.otel_sdk_disabled:
+        return
+
+    if trace_provider is not None:
+        trace_provider.shutdown()
+
+    if log_provider is not None:
+        log_provider.shutdown()
+
+    if meter_provider is not None:
+        meter_provider.shutdown()
+
+
+# ------------------------------------------------------------------------------
+# NOTE: Import-time setup is intentional.
+#
+# This allows uvicorn's logging.dictConfig() to resolve:
+#
+#   handlers:
+#     otel:
+#       (): app.otel.get_otel_handler
+#
+# At that point, get_otel_handler() must be importable and must already have access
+# to an initialized LoggerProvider.
+
+settings = get_settings()
+
+# Providers
+log_provider, trace_provider = _get_providers(settings)
+
+# Exporters
+log_exporters, span_exporters, metric_exporters = _get_exporters(settings)
+
+_setup_log_processors(log_provider, log_exporters)
+_setup_span_processors(trace_provider, span_exporters)
+
+meter_provider = _setup_metrics(settings, metric_exporters)
 
 
 def get_otel_handler() -> logging.Handler:
