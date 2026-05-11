@@ -105,6 +105,9 @@ def moto_server() -> Generator[str]:
 def settings(moto_server: str) -> Settings:
     """Fixture to provide application settings for testing, overriding the DynamoDB endpoint URL."""
     return Settings(
+        # Pydantic will automatically load any .env or .env.default file, so for testing to avoid
+        # any different test result between CI and local environment (in which .env file can differ)
+        # we make sure pydantic don't load the environment file with `_env_file=None`
         _env_file=None,  # ty:ignore[unknown-argument]
         cors_origins=["http://test.com", "https://hello.com"],
         cors_origin_regex=r"http://localhost:\d+",
