@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     yield
 
     # Shutdown code (runs after application shutdown)
-    shutdown_otel(settings)
+    shutdown_otel()
 
     logger.info("Shutdown tasks completed")
 
@@ -138,4 +138,4 @@ app.include_router(state.router)
 
 
 # Setup OTEL instrumentation
-initialize_instrumentation(settings, app)
+initialize_instrumentation(app)
