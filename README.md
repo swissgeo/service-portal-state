@@ -153,7 +153,7 @@ By default, local development with the FastAPI dev server (make serve) runs with
 OpenTelemetry disabled and uses standard Python console logging for a simpler and more
 readable developer experience.
 
-See [OpenTelemetry Python Instrumentation documentation](https://opentelemetry.io/docs/languages/python/instrumentation/?utm_source=chatgpt.com)
+See [OpenTelemetry Python Instrumentation documentation](https://opentelemetry.io/docs/languages/python/instrumentation)
 
 for more information about adding tracing and metrics inside the application code.
 

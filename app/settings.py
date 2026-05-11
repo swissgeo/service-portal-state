@@ -1,3 +1,4 @@
+from enum import StrEnum
 from functools import lru_cache
 from typing import Annotated
 
@@ -5,6 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from fastapi import Depends
 from pydantic import field_validator, model_validator
+
+
+class Exporter(StrEnum):
+    OTLP = "otlp"
+    CONSOLE = "console"
 
 
 class Settings(BaseSettings):
@@ -48,9 +54,9 @@ class Settings(BaseSettings):
     otel_enable_metrics: bool = False
 
     # configure exporters
-    otel_trace_exporters: list[str] = ["otlp"]
-    otel_metrics_exporters: list[str] = ["otlp"]
-    otel_logging_exporters: list[str] = ["otlp"]
+    otel_trace_exporters: list[Exporter] = [Exporter.OTLP]
+    otel_metrics_exporters: list[Exporter] = [Exporter.OTLP]
+    otel_logging_exporters: list[Exporter] = [Exporter.OTLP]
 
     # Logging
     # When using the fastapi dev server, we can configure logging inside our application for better
@@ -85,30 +91,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_otel_exporters(self) -> Settings:
-        allowed_exporters = {"otlp", "console"}
-
-        exporters_fields = (
+        for field_name in (
             "otel_trace_exporters",
             "otel_metrics_exporters",
             "otel_logging_exporters",
-        )
-
-        for field_name in exporters_fields:
+        ):
             exporters = getattr(self, field_name)
-
-            invalid = set(exporters) - allowed_exporters
-            if invalid:
-                raise ValueError(
-                    f"{field_name} contains invalid exporter(s): {sorted(invalid)}. "
-                    "Allowed values are: otlp, console."
-                )
-
-            if "otlp" in exporters and not self.otel_enable_otlp_exporter:
+            if Exporter.OTLP in exporters and not self.otel_enable_otlp_exporter:
                 raise ValueError(
                     f"{field_name} contains 'otlp' but otel_enable_otlp_exporter is false."
                 )
 
-            if "console" in exporters and not self.otel_enable_console_exporter:
+            if Exporter.CONSOLE in exporters and not self.otel_enable_console_exporter:
                 raise ValueError(
                     f"{field_name} contains 'console' but otel_enable_console_exporter is false."
                 )

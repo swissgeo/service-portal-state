@@ -7,7 +7,7 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExp
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.botocore import AiobotocoreInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
@@ -183,10 +183,8 @@ def shutdown_otel(settings: Settings) -> None:
 
 settings = get_settings()
 
-# Providers
 log_provider, trace_provider = _get_providers(settings)
 
-# Exporters
 log_exporters, span_exporters, metric_exporters = _get_exporters(settings)
 
 _setup_log_processors(log_provider, log_exporters)
@@ -203,7 +201,5 @@ def get_otel_handler() -> logging.Handler:
         )
     if log_provider is None:
         raise ValueError("OTEL log provider is not available")
-
-    from opentelemetry.sdk._logs import LoggingHandler  # noqa: PLC0415
 
     return LoggingHandler(logger_provider=log_provider)
