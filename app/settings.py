@@ -1,5 +1,6 @@
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -62,7 +63,7 @@ class Settings(BaseSettings):
     # When using the fastapi dev server, we can configure logging inside our application for better
     # user experience. Otherwise logging is configured by uvicorn
     logging_enable_dev_server_logging: bool = False
-    logging_config_file: str | None = None
+    logging_config_file: Path | None = None
     # Overwrite the handlers logging level from the one in the logging configuration
     logging_handlers_level: str | None = None
 

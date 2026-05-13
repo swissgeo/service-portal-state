@@ -25,7 +25,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 from fastapi import FastAPI
 
-from app.settings import get_settings
+from app.settings import Exporter, get_settings
 
 _resource = Resource.create({"service.name": "service-portal-state"})
 
@@ -60,7 +60,7 @@ def _get_exporters() -> tuple[
     # OTLP exporters
     if settings.otel_enable_otlp_exporter:
         # Tracing OTLP exporter
-        if "otlp" in settings.otel_trace_exporters:
+        if Exporter.OTLP in settings.otel_trace_exporters:
             span_exporters.append(
                 OTLPSpanExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -70,7 +70,7 @@ def _get_exporters() -> tuple[
             )
 
         # Metrics OTLP exporter
-        if "otlp" in settings.otel_metrics_exporters:
+        if Exporter.OTLP in settings.otel_metrics_exporters:
             metric_exporters.append(
                 OTLPMetricExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -80,7 +80,7 @@ def _get_exporters() -> tuple[
             )
 
         # Logs OTLP exporter
-        if "otlp" in settings.otel_logging_exporters:
+        if Exporter.OTLP in settings.otel_logging_exporters:
             logs_exporters.append(
                 OTLPLogExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -90,11 +90,11 @@ def _get_exporters() -> tuple[
             )
 
     if settings.otel_enable_console_exporter:
-        if "console" in settings.otel_trace_exporters:
+        if Exporter.CONSOLE in settings.otel_trace_exporters:
             span_exporters.append(ConsoleSpanExporter())
-        if "console" in settings.otel_metrics_exporters:
+        if Exporter.CONSOLE in settings.otel_metrics_exporters:
             metric_exporters.append(ConsoleMetricExporter())
-        if "console" in settings.otel_logging_exporters:
+        if Exporter.CONSOLE in settings.otel_logging_exporters:
             logs_exporters.append(ConsoleLogRecordExporter())
 
     return logs_exporters, span_exporters, metric_exporters
@@ -179,7 +179,7 @@ def get_otel_handler() -> logging.Handler:
 def initialize_instrumentation(app: FastAPI) -> None:
     """Initialize OTEL instrumentation
 
-    Setup OTEL trancing functionalities for third party libraries
+    Setup OTEL tracing functionalities for third party libraries
     """
     if settings.otel_sdk_disabled:
         return

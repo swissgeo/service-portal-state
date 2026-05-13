@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-def get_logging_cfg(config_file: str) -> dict:  # pragma: no cover
+def get_logging_cfg(config_file: Path) -> dict:  # pragma: no cover
     """Load and parse logging configuration from the given file"""
-    config = yaml.safe_load(Path(config_file).read_text())
+    config = yaml.safe_load(config_file.read_text())
 
     logger.info("Loaded logging configuration from file %s", config_file)
     return config
