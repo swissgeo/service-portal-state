@@ -31,6 +31,8 @@ _resource = Resource.create({"service.name": "service-portal-state"})
 
 
 def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         return None, None
     # Log provider can be used together with logging instrumentation to send logs to the OTEL
@@ -50,6 +52,8 @@ def _get_exporters() -> tuple[
     list[SpanExporter],
     list[MetricExporter],
 ]:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         return [], [], []
 
@@ -123,6 +127,8 @@ def _setup_span_processors(
 
 
 def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled or not settings.otel_enable_metrics:
         return None
 
@@ -152,8 +158,6 @@ def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
 # At that point, get_otel_handler() must be importable and must already have access
 # to an initialized LoggerProvider.
 
-settings = get_settings()
-
 log_provider, trace_provider = _get_providers()
 
 log_exporters, span_exporters, metric_exporters = _get_exporters()
@@ -166,6 +170,8 @@ meter_provider = _setup_metrics(metric_exporters)
 
 def get_otel_handler() -> logging.Handler:
     """Get the OTEL logging Handler"""
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         raise ValueError(
             "Cannot use OTEL handler in logging configuration when OTEL_SDK_DISABLE is true"
@@ -181,6 +187,8 @@ def initialize_instrumentation(app: FastAPI) -> None:
 
     Setup OTEL tracing functionalities for third party libraries
     """
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         return
 
