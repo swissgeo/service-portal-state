@@ -7,7 +7,7 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExp
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.botocore import AiobotocoreInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
@@ -25,15 +25,16 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 from fastapi import FastAPI
 
-from app.settings import Settings, get_settings
+from app.settings import Exporter, get_settings
 
 _resource = Resource.create({"service.name": "service-portal-state"})
 
 
-def _get_providers(settings: Settings) -> tuple[LoggerProvider | None, TracerProvider | None]:
+def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         return None, None
-
     # Log provider can be used together with logging instrumentation to send logs to the OTEL
     # configured exporter in the correct OTEL format
     log_provider = LoggerProvider(resource=_resource)
@@ -46,13 +47,13 @@ def _get_providers(settings: Settings) -> tuple[LoggerProvider | None, TracerPro
     return log_provider, trace_provider
 
 
-def _get_exporters(
-    settings: Settings,
-) -> tuple[
+def _get_exporters() -> tuple[
     list[LogRecordExporter],
     list[SpanExporter],
     list[MetricExporter],
 ]:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         return [], [], []
 
@@ -63,7 +64,7 @@ def _get_exporters(
     # OTLP exporters
     if settings.otel_enable_otlp_exporter:
         # Tracing OTLP exporter
-        if "otlp" in settings.otel_trace_exporters:
+        if Exporter.OTLP in settings.otel_trace_exporters:
             span_exporters.append(
                 OTLPSpanExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -73,7 +74,7 @@ def _get_exporters(
             )
 
         # Metrics OTLP exporter
-        if "otlp" in settings.otel_metrics_exporters:
+        if Exporter.OTLP in settings.otel_metrics_exporters:
             metric_exporters.append(
                 OTLPMetricExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -83,7 +84,7 @@ def _get_exporters(
             )
 
         # Logs OTLP exporter
-        if "otlp" in settings.otel_logging_exporters:
+        if Exporter.OTLP in settings.otel_logging_exporters:
             logs_exporters.append(
                 OTLPLogExporter(
                     endpoint=settings.otel_exporter_otlp_endpoint,
@@ -93,11 +94,11 @@ def _get_exporters(
             )
 
     if settings.otel_enable_console_exporter:
-        if "console" in settings.otel_trace_exporters:
+        if Exporter.CONSOLE in settings.otel_trace_exporters:
             span_exporters.append(ConsoleSpanExporter())
-        if "console" in settings.otel_metrics_exporters:
+        if Exporter.CONSOLE in settings.otel_metrics_exporters:
             metric_exporters.append(ConsoleMetricExporter())
-        if "console" in settings.otel_logging_exporters:
+        if Exporter.CONSOLE in settings.otel_logging_exporters:
             logs_exporters.append(ConsoleLogRecordExporter())
 
     return logs_exporters, span_exporters, metric_exporters
@@ -125,7 +126,9 @@ def _setup_span_processors(
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
 
-def _setup_metrics(settings: Settings, exporters: list[MetricExporter]) -> MeterProvider | None:
+def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
+    settings = get_settings()
+
     if settings.otel_sdk_disabled or not settings.otel_enable_metrics:
         return None
 
@@ -143,32 +146,6 @@ def _setup_metrics(settings: Settings, exporters: list[MetricExporter]) -> Meter
     return meter_provider
 
 
-def initialize_instrumentation(settings: Settings, app: FastAPI) -> None:
-    if settings.otel_sdk_disabled:
-        return
-
-    # Setup tracing instrumentation
-    if settings.otel_enable_boto:
-        AiobotocoreInstrumentor().instrument()
-    if settings.otel_enable_fastapi:
-        FastAPIInstrumentor.instrument_app(app)
-
-
-def shutdown_otel(settings: Settings) -> None:
-    """Flush and shutdown OTEL providers/processors on application shutdown."""
-    if settings.otel_sdk_disabled:
-        return
-
-    if trace_provider is not None:
-        trace_provider.shutdown()
-
-    if log_provider is not None:
-        log_provider.shutdown()
-
-    if meter_provider is not None:
-        meter_provider.shutdown()
-
-
 # ------------------------------------------------------------------------------
 # NOTE: Import-time setup is intentional.
 #
@@ -181,22 +158,20 @@ def shutdown_otel(settings: Settings) -> None:
 # At that point, get_otel_handler() must be importable and must already have access
 # to an initialized LoggerProvider.
 
-settings = get_settings()
+log_provider, trace_provider = _get_providers()
 
-# Providers
-log_provider, trace_provider = _get_providers(settings)
-
-# Exporters
-log_exporters, span_exporters, metric_exporters = _get_exporters(settings)
+log_exporters, span_exporters, metric_exporters = _get_exporters()
 
 _setup_log_processors(log_provider, log_exporters)
 _setup_span_processors(trace_provider, span_exporters)
 
-meter_provider = _setup_metrics(settings, metric_exporters)
+meter_provider = _setup_metrics(metric_exporters)
 
 
 def get_otel_handler() -> logging.Handler:
     """Get the OTEL logging Handler"""
+    settings = get_settings()
+
     if settings.otel_sdk_disabled:
         raise ValueError(
             "Cannot use OTEL handler in logging configuration when OTEL_SDK_DISABLE is true"
@@ -204,6 +179,34 @@ def get_otel_handler() -> logging.Handler:
     if log_provider is None:
         raise ValueError("OTEL log provider is not available")
 
-    from opentelemetry.sdk._logs import LoggingHandler  # noqa: PLC0415
-
     return LoggingHandler(logger_provider=log_provider)
+
+
+def initialize_instrumentation(app: FastAPI) -> None:
+    """Initialize OTEL instrumentation
+
+    Setup OTEL tracing functionalities for third party libraries
+    """
+    settings = get_settings()
+
+    if settings.otel_sdk_disabled:
+        return
+
+    # Setup tracing instrumentation
+    if settings.otel_enable_boto:
+        AiobotocoreInstrumentor().instrument()
+    if settings.otel_enable_fastapi:
+        FastAPIInstrumentor.instrument_app(app)
+
+
+def shutdown_otel() -> None:
+    """Flush and shutdown OTEL providers/processors on application shutdown."""
+
+    if trace_provider is not None:
+        trace_provider.shutdown()
+
+    if log_provider is not None:
+        log_provider.shutdown()
+
+    if meter_provider is not None:
+        meter_provider.shutdown()

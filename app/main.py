@@ -2,6 +2,7 @@ import logging
 import logging.config
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import aioboto3
@@ -23,10 +24,9 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-def get_logging_cfg(config_file: str) -> dict:  # pragma: no cover
+def get_logging_cfg(config_file: Path) -> dict:  # pragma: no cover
     """Load and parse logging configuration from the given file"""
-    with open(config_file, encoding="utf-8") as fd:
-        config = yaml.safe_load(fd.read())
+    config = yaml.safe_load(config_file.read_text())
 
     logger.info("Loaded logging configuration from file %s", config_file)
     return config
@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     yield
 
     # Shutdown code (runs after application shutdown)
-    shutdown_otel(settings)
+    shutdown_otel()
 
     logger.info("Shutdown tasks completed")
 
@@ -138,4 +138,4 @@ app.include_router(state.router)
 
 
 # Setup OTEL instrumentation
-initialize_instrumentation(settings, app)
+initialize_instrumentation(app)

@@ -4,6 +4,10 @@ import pytest
 
 from app.settings import Settings
 
+# NOTE: Pydantic will automatically load any .env or .env.default file, so for testing to avoid
+# any different test result between CI and local environment (in which .env file can differ)
+# we make sure pydantic doesn't load the environment file with `_env_file=None`
+
 
 def test_defaults(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_DYNAMODB_TABLE_NAME", "test-table")
