@@ -1,0 +1,20 @@
+version: 1
+disable_existing_loggers: False
+
+root:
+  handlers:
+    - otel
+  level: DEBUG
+  propagate: True
+
+handlers:
+  otel:
+    (): app.otel.get_otel_handler
+
+loggers:
+  uvicorn.access:
+    level: INFO
+  botocore:
+    level: INFO
+  aiobotocore:
+    level: INFO
