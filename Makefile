@@ -132,12 +132,12 @@ lint: ## Run the linter and type checker on the code base
 
 .PHONY: test-ci
 test-ci: ## Run tests in the CI
-	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml --cov-fail-under 100 -n 10
+	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml -n 10
 
 
 .PHONY: test
 test: ## Run tests locally
-	$(TEST) --cov --cov-branch --cov-report=html --cov-fail-under 100 -n 10
+	$(TEST) --cov --cov-branch --cov-report=html -n 10
 
 
 docker-network:

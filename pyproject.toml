@@ -141,7 +141,7 @@ addopts = []
 #==============================================================================
 # Coverage configuration
 [tool.coverage.run]
-omit = ["*/tests/*", "version.py", "otel.py"]
+omit = ["*/tests/*", "version.py"]
 
 [tool.coverage.report]
 exclude_lines = ["if TYPE_CHECKING:", "pragma: no cover"]
