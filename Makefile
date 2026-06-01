@@ -132,7 +132,11 @@ lint: ## Run the linter and type checker on the code base
 
 .PHONY: test-ci
 test-ci: ## Run tests in the CI
-	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml --cov-fail-under 100 -n 10
+	# NOTE on the CI we do not fail the build if the coverage is below 100% because we want to be
+	# able to merge PRs even if they decrease the coverage. The coverage report will be used in
+	# codecov.io to track the coverage over time and to check if it decreases or not. Also
+	# the coverage report is only loaded if make test-ci is successful.
+	$(TEST) --cov --cov-branch --cov-report=xml:coverage.xml -n 10
 
 
 .PHONY: test
