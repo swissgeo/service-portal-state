@@ -1,7 +1,6 @@
 import math
-from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import AnyUrl, BaseModel, Field, PositiveFloat
 
@@ -32,11 +31,11 @@ class MapState(BaseModel):
 
 
 class TimeDimension(BaseModel):
-    current_value: datetime | Literal["current"] | None = Field(
+    current_value: Annotated[str | None, Field(max_length=50)] = Field(
         alias="currentValue",
         default=None,
         description="Current selected time value",
-        examples=["current"],
+        examples=["current", "20211231", "2025"],
     )
 
 
