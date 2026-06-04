@@ -3,14 +3,10 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import AnyUrl, BaseModel, Field, PositiveFloat
+from pydantic import AnyUrl, BaseModel, Field
 
-CoordinateX = Annotated[
-    PositiveFloat, Field(description="Coordinate x in LV95 / EPSG:2056 (meters)")
-]
-CoordinateY = Annotated[
-    PositiveFloat, Field(description="Coordinate y in LV95 / EPSG:2056 (meters)")
-]
+CoordinateX = Annotated[float, Field(ge=0, description="Coordinate x in LV95 / EPSG:2056 (meters)")]
+CoordinateY = Annotated[float, Field(ge=0, description="Coordinate y in LV95 / EPSG:2056 (meters)")]
 
 
 class MapState(BaseModel):
