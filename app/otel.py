@@ -10,22 +10,18 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
-    ConsoleLogRecordExporter,
-    LogRecordExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
-    ConsoleMetricExporter,
-    MetricExporter,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from fastapi import FastAPI
 
-from app.settings import Exporter, get_settings
+from app.settings import get_settings
 
 _resource = Resource.create({"service.name": "service-portal-state"})
 
@@ -48,85 +44,57 @@ def _get_providers() -> tuple[LoggerProvider | None, TracerProvider | None]:
 
 
 def _get_exporters() -> tuple[
-    list[LogRecordExporter],
-    list[SpanExporter],
-    list[MetricExporter],
+    OTLPLogExporter | None,
+    OTLPSpanExporter | None,
+    OTLPMetricExporter | None,
 ]:
     settings = get_settings()
 
-    if settings.otel_sdk_disabled:
-        return [], [], []
+    if settings.otel_sdk_disabled and not settings.otel_enable_otlp_exporter:
+        return None, None, None
 
-    metric_exporters = []
-    logs_exporters = []
-    span_exporters = []
-
-    # OTLP exporters
-    if settings.otel_enable_otlp_exporter:
-        # Tracing OTLP exporter
-        if Exporter.OTLP in settings.otel_trace_exporters:
-            span_exporters.append(
-                OTLPSpanExporter(
-                    endpoint=settings.otel_exporter_otlp_endpoint,
-                    headers=settings.otel_exporter_otlp_headers,
-                    insecure=settings.otel_exporter_otlp_insecure,
-                )
-            )
-
-        # Metrics OTLP exporter
-        if Exporter.OTLP in settings.otel_metrics_exporters:
-            metric_exporters.append(
-                OTLPMetricExporter(
-                    endpoint=settings.otel_exporter_otlp_endpoint,
-                    headers=settings.otel_exporter_otlp_headers,
-                    insecure=settings.otel_exporter_otlp_insecure,
-                )
-            )
-
-        # Logs OTLP exporter
-        if Exporter.OTLP in settings.otel_logging_exporters:
-            logs_exporters.append(
-                OTLPLogExporter(
-                    endpoint=settings.otel_exporter_otlp_endpoint,
-                    headers=settings.otel_exporter_otlp_headers,
-                    insecure=settings.otel_exporter_otlp_insecure,
-                )
-            )
-
-    if settings.otel_enable_console_exporter:
-        if Exporter.CONSOLE in settings.otel_trace_exporters:
-            span_exporters.append(ConsoleSpanExporter())
-        if Exporter.CONSOLE in settings.otel_metrics_exporters:
-            metric_exporters.append(ConsoleMetricExporter())
-        if Exporter.CONSOLE in settings.otel_logging_exporters:
-            logs_exporters.append(ConsoleLogRecordExporter())
+    logs_exporters = OTLPLogExporter(
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        headers=settings.otel_exporter_otlp_headers,
+        insecure=settings.otel_exporter_otlp_insecure,
+    )
+    span_exporters = OTLPSpanExporter(
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        headers=settings.otel_exporter_otlp_headers,
+        insecure=settings.otel_exporter_otlp_insecure,
+    )
+    metric_exporters = OTLPMetricExporter(
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        headers=settings.otel_exporter_otlp_headers,
+        insecure=settings.otel_exporter_otlp_insecure,
+    )
 
     return logs_exporters, span_exporters, metric_exporters
 
 
 def _setup_log_processors(
     provider: LoggerProvider | None,
-    exporters: list[LogRecordExporter],
+    exporter: OTLPLogExporter | None,
 ) -> None:
     if provider is None:
         return
 
-    for exporter in exporters:
+    if exporter:
         provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 
 
 def _setup_span_processors(
     provider: TracerProvider | None,
-    exporters: list[SpanExporter],
+    exporter: OTLPSpanExporter | None,
 ) -> None:
     if provider is None:
         return
 
-    for exporter in exporters:
+    if exporter:
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
 
-def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
+def _setup_metrics(exporter: OTLPMetricExporter | None) -> MeterProvider | None:
     settings = get_settings()
 
     if settings.otel_sdk_disabled or not settings.otel_enable_metrics:
@@ -135,7 +103,7 @@ def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
     # The periodic exporter can be configured via environment variable:
     # OTEL_METRIC_EXPORT_INTERVAL [ms] => default to 60'000
     # OTEL_METRIC_EXPORT_TIMEOUT [ms] => default to 30'000
-    metric_readers = [PeriodicExportingMetricReader(exporter) for exporter in exporters]
+    metric_readers = [PeriodicExportingMetricReader(exporter)] if exporter else []
 
     meter_provider = MeterProvider(
         metric_readers=metric_readers,
@@ -160,12 +128,12 @@ def _setup_metrics(exporters: list[MetricExporter]) -> MeterProvider | None:
 
 log_provider, trace_provider = _get_providers()
 
-log_exporters, span_exporters, metric_exporters = _get_exporters()
+log_exporter, span_exporter, metric_exporter = _get_exporters()
 
-_setup_log_processors(log_provider, log_exporters)
-_setup_span_processors(trace_provider, span_exporters)
+_setup_log_processors(log_provider, log_exporter)
+_setup_span_processors(trace_provider, span_exporter)
 
-meter_provider = _setup_metrics(metric_exporters)
+meter_provider = _setup_metrics(metric_exporter)
 
 
 def get_otel_handler() -> logging.Handler:
