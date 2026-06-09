@@ -19,7 +19,6 @@ Service portal state is the new shared application state backend service for SWI
 - [Observability](#observability)
   - [Logging implementation](#logging-implementation)
   - [Local OTEL testing](#local-otel-testing)
-  - [Hybrid logging mode](#hybrid-logging-mode)
 
 ## Development
 
@@ -147,7 +146,7 @@ The service supports OpenTelemetry logging, tracing, and metrics.
 
 In production deployments, telemetry can be exported using the configured OTLP exporters,
 typically to an OpenTelemetry Collector or any OTLP-compatible observability platform. Only the OTLP
-and console exporters are currently implemented by the application configuration layer.
+exportert is currently implemented by the application configuration layer.
 
 By default, local development with the FastAPI dev server (make serve) runs with
 OpenTelemetry disabled and uses standard Python console logging for a simpler and more
@@ -161,9 +160,10 @@ for more information about adding tracing and metrics inside the application cod
 
 The application uses the OpenTelemetry `LoggerProvider` directly to export logs.
 
-The deprecated `opentelemetry-instrumentation-logging` package is intentionally not
-used, as `LoggerProvider` already associates logs with the active trace/span context and
-provides native structured OTEL log exporting.
+> [!WARNING]
+> The deprecated `opentelemetry-instrumentation-logging` package is intentionally not
+> used, as `LoggerProvider` already associates logs with the active trace/span context and
+> provides native structured OTEL log exporting.
 
 ### Local OTEL testing
 
@@ -171,23 +171,21 @@ To test the full OTEL configuration locally (logs, traces, and metrics exported 
 OpenTelemetry), use the provided OTEL environment configuration and run the application
 with Docker:
 
-```bash
-cp .env.otel .env
-make dockerrun
-```
+1. Start the local otel collector
 
-This configuration enables the OTLP exporters and sends telemetry to the configured
-OpenTelemetry endpoint.
+    ```bash
+    make start-otel
+    ```
 
-### Hybrid logging mode
+2. In a new shell start the application
 
-You can also test a hybrid configuration where telemetry is exported through OpenTelemetry
-while logs are still printed locally using the standard Python console handler:
+    ```bash
+    cp .env.otel .env
+    make dockerrun
+    ```
 
-```bash
-cp .env.otel-console .env
-make dockerrun
-```
+This configuration enables the OTLP exporters and sends telemetry to the local configured
+OpenTelemetry collector endpoint created via `make start-otel`.
 
-This mode is useful for local debugging while validating OTEL export configuration in
-parallel.
+Then you will see OTEL logs and metrics in the first shell in which you started `make start-otel` and
+you can see the full trace using `jaeger` trace explorer at http://localhost:16686
