@@ -2,7 +2,7 @@
 # Container that contains basic configurations used by all other containers
 # It should only contain variables that don't change or change very infrequently
 # so that the cache is not needlessly invalidated
-FROM python:3.14-slim-bookworm AS base
+FROM python:3.14-slim-trixie AS base
 ENV USER=swissgeo
 ENV GROUP=swissgeo
 ENV INSTALL_DIR=/opt/service-portal-state
