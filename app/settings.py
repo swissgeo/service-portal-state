@@ -1,4 +1,3 @@
-from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
@@ -6,12 +5,7 @@ from typing import Annotated
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from fastapi import Depends
-from pydantic import field_validator, model_validator
-
-
-class Exporter(StrEnum):
-    OTLP = "otlp"
-    CONSOLE = "console"
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -26,6 +20,9 @@ class Settings(BaseSettings):
     # variable uses CONSTANT_CASE) and are parsed using json syntax.
 
     root_path: str = ""
+
+    # OpenAPI settings
+    publish_openapi_spec: bool = False
 
     # CORS settings
     cors_origins: list[str] = []
@@ -49,15 +46,8 @@ class Settings(BaseSettings):
     otel_exporter_otlp_endpoint: str = "http://localhost:4317"
     otel_exporter_otlp_headers: str = ""
     otel_exporter_otlp_insecure: bool = False
-    # Console exporter
-    otel_enable_console_exporter: bool = False
     # Metrics
     otel_enable_metrics: bool = False
-
-    # configure exporters
-    otel_trace_exporters: list[Exporter] = [Exporter.OTLP]
-    otel_metrics_exporters: list[Exporter] = [Exporter.OTLP]
-    otel_logging_exporters: list[Exporter] = [Exporter.OTLP]
 
     # Logging
     # When using the fastapi dev server, we can configure logging inside our application for better
@@ -79,9 +69,6 @@ class Settings(BaseSettings):
         "cors_origins",
         "cors_method",
         "cors_headers",
-        "otel_trace_exporters",
-        "otel_metrics_exporters",
-        "otel_logging_exporters",
         mode="before",
     )
     @classmethod
@@ -89,26 +76,6 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return v
         return v.split(",")
-
-    @model_validator(mode="after")
-    def validate_otel_exporters(self) -> Settings:
-        for field_name in (
-            "otel_trace_exporters",
-            "otel_metrics_exporters",
-            "otel_logging_exporters",
-        ):
-            exporters = getattr(self, field_name)
-            if Exporter.OTLP in exporters and not self.otel_enable_otlp_exporter:
-                raise ValueError(
-                    f"{field_name} contains 'otlp' but otel_enable_otlp_exporter is false."
-                )
-
-            if Exporter.CONSOLE in exporters and not self.otel_enable_console_exporter:
-                raise ValueError(
-                    f"{field_name} contains 'console' but otel_enable_console_exporter is false."
-                )
-
-        return self
 
 
 # Settings are wrapped in an lru_cache to ensure a single, lazily-initialized instance

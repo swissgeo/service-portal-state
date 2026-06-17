@@ -4,12 +4,9 @@ disable_existing_loggers: False
 root:
   handlers:
     - otel
+    - console
   level: DEBUG
   propagate: True
-
-handlers:
-  otel:
-    (): app.otel.get_otel_handler
 
 loggers:
   uvicorn.access:
@@ -18,3 +15,15 @@ loggers:
     level: INFO
   aiobotocore:
     level: INFO
+
+formatters:
+  standard:
+    format: "[%(asctime)s] %(levelname)-8s - %(name)-26s : %(message)s"
+
+handlers:
+  otel:
+    (): app.otel.get_otel_handler
+  console:
+    class: logging.StreamHandler
+    formatter: standard
+    stream: ext://sys.stdout

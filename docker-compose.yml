@@ -5,7 +5,7 @@ services:
     ports:
       - "${MOTO_PORT:-5000}:5000"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000" ]
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -14,7 +14,7 @@ services:
 
   init-dynamo:
     image: amazon/aws-cli
-    entrypoint: [ "/bin/sh", "-c" ]
+    entrypoint: ["/bin/sh", "-c"]
     volumes:
       - ./:/work
     working_dir: /work
@@ -36,7 +36,28 @@ services:
     networks:
       - network_local
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: --config otel-local-config.yaml
+    volumes:
+      - ./otel-local-config.yaml:/otel-local-config.yaml
+    ports:
+      - "4317:4317"
+    depends_on:
+      - jaeger
+    networks:
+      - network_local
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # Jaeger UI
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - network_local
+
 networks:
   network_local:
     external: true
-    name: shared_network_local
+    name: service_portal_state_network

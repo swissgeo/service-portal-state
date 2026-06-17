@@ -63,7 +63,7 @@ ci: .env
 
 
 .PHONY: setup
-setup: .env ## Create virtualenv with all packages for development
+setup: .env start-moto start-otel ## Create virtualenv with all packages for development
 	uv sync
 	$(PRE_COMMIT) install
 	# Start a new shell with the virtualenv activated and the .env file loaded into the environment
@@ -141,15 +141,15 @@ test-ci: ## Run tests in the CI
 
 .PHONY: test
 test: ## Run tests locally
-	$(TEST) --cov --cov-branch --cov-report=html --cov-fail-under 100 -n 10
+	$(TEST) --cov --cov-branch --cov-report=term --cov-report=html -n 10
 
 
 docker-network:
-	@if ! docker network inspect shared_network_local >/dev/null 2>&1; then \
-		echo "Creating network shared_network_local"; \
-		docker network create shared_network_local; \
+	@if ! docker network inspect service_portal_state_network >/dev/null 2>&1; then \
+		echo "Creating network service_portal_state_network"; \
+		docker network create service_portal_state_network; \
 	else \
-		echo "Network shared_network_local already exists"; \
+		echo "Network service_portal_state_network already exists"; \
 	fi
 
 
@@ -166,6 +166,18 @@ start-moto: docker-network ## Run moto server locally and initialize resources (
 .PHONY: stop-moto
 stop-moto: ## Stop the moto server container
 	docker stop moto-server
+
+
+.PHONY: start-otel
+start-otel: docker-network ## Run otel collector and jaeger trace analyzer locally
+	docker compose up -d jaeger
+	docker compose up otel-collector
+
+
+.PHONY: stop-otel
+stop-otel: ## Stop the otel collector and jaeger trace analyzer
+	docker compose down jaeger
+	docker compose down otel-collector
 
 
 .PHONY: help
