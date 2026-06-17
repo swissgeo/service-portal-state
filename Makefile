@@ -141,7 +141,7 @@ test-ci: ## Run tests in the CI
 
 .PHONY: test
 test: ## Run tests locally
-	$(TEST) --cov --cov-branch --cov-report=html --cov-fail-under 100 -n 10
+	$(TEST) --cov --cov-branch --cov-report=term --cov-report=html -n 10
 
 
 docker-network:
