@@ -15,7 +15,7 @@ from app.api.internal import INTERNAL_TAG
 from app.api.state import STATE_TAG
 from app.core.exceptions import register_exception_handlers
 from app.middlewares.canonical_hash import CanonicalHashMiddleware
-from app.openapi import setup_openapi
+from app.openapi import get_openapi_spec_url, setup_openapi
 from app.otel import initialize_instrumentation, shutdown_otel
 from app.settings import get_settings
 from app.version import __version__
@@ -77,6 +77,7 @@ app = FastAPI(
         "name": "BSD 3-Clause License",
         "identifier": "BSD-3-Clause",
     },
+    openapi_url=get_openapi_spec_url(),
     openapi_tags=[
         {"name": INTERNAL_TAG, "description": "Internal APIs not for external uses"},
         {"name": STATE_TAG, "description": "Application State Operations"},
@@ -84,7 +85,8 @@ app = FastAPI(
     lifespan=lifespan,
     root_path=settings.root_path,
 )
-setup_openapi(app)
+if settings.publish_openapi_spec:
+    setup_openapi(app)
 
 # Register exceptions handlers
 register_exception_handlers(app)
