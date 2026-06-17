@@ -12,10 +12,9 @@ from app.schemas.state import (
     StateItem,
 )
 
-router = APIRouter()
+STATE_TAG = "Application State"
 
-
-OPENAPI__TAG = "Application State"
+router = APIRouter(tags=[STATE_TAG])
 
 # TODO re-asses the usage of such metric
 meter = metrics.get_meter(__name__)
@@ -36,7 +35,6 @@ get_meter = meter.create_counter(
     response_model_exclude_none=True,
     response_model_exclude_unset=True,
     responses={400: {"model": ErrorResponse}},
-    tags=[OPENAPI__TAG],
 )
 async def post_app_state(
     request: Request,
@@ -80,7 +78,6 @@ async def post_app_state(
         400: {"model": ErrorResponse},
         404: {"model": ErrorResponse},
     },
-    tags=[OPENAPI__TAG],
 )
 async def get_app_state(
     request: Request, state_id: StateId, app: StateServiceDep, bg_tasks: BackgroundTasks
