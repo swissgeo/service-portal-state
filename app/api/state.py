@@ -80,7 +80,11 @@ async def post_app_state(
     },
 )
 async def get_app_state(
-    request: Request, state_id: StateId, app: StateServiceDep, bg_tasks: BackgroundTasks
+    request: Request,
+    response: Response,
+    state_id: StateId,
+    app: StateServiceDep,
+    bg_tasks: BackgroundTasks,
 ) -> GetAppStateResponse:
     """Retrieve an application state by ID"""
 
@@ -96,4 +100,7 @@ async def get_app_state(
     )
     bg_tasks.add_task(app.update_last_accessed, db_item)
 
+    # Set the cache control header, note that an answer can never change because
+    # we use a hash of the state content, so we can cache it forever.
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return GetAppStateResponse.from_db_state_item(db_item)

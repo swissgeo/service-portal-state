@@ -35,6 +35,17 @@ def test_get_app_empty_state(client: TestClient, db_state_item_empty: dict):
     assert data == {"state": {}}
 
 
+def test_get_app_state_cache_control(client: TestClient, db_state_item_empty: dict):
+    state_id = db_state_item_empty[0]["id"]
+
+    response = client.get(f"/{state_id}")
+
+    assert response.status_code == 200, (
+        f"Unexpected response {response.status_code}: {response.json()}"
+    )
+    assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+
+
 @pytest.mark.parametrize(
     ("origin", "method"),
     [
