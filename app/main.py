@@ -1,3 +1,4 @@
+import json
 import logging
 import logging.config
 from collections.abc import AsyncGenerator
@@ -8,11 +9,16 @@ from typing import Any
 import aioboto3
 import yaml
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse
+from fastapi.routing import APIRoute
 
-from app.api import checker, state
+from app.api import internal, state
+from app.api.internal import INTERNAL_TAG
+from app.api.state import STATE_TAG
 from app.core.exceptions import register_exception_handlers
 from app.middlewares.canonical_hash import CanonicalHashMiddleware
 from app.otel import initialize_instrumentation, shutdown_otel
@@ -32,37 +38,91 @@ def get_logging_cfg(config_file: Path) -> dict:  # pragma: no cover
     return config
 
 
-def customize_openapi(app: FastAPI) -> None:
-    """Customize openapi
+def _remove_422(schema: dict[str, Any]) -> None:
+    for method_item in schema.get("paths", {}).values():
+        for param in method_item.values():
+            param.get("responses", {}).pop("422", None)
 
-    Hack to get rid of the 422 in the openapi which is replaced by 400 by our exception handler
+
+def _build_default_schema(app: FastAPI) -> dict[str, Any]:
+    routes = [r for r in app.routes if not (isinstance(r, APIRoute) and INTERNAL_TAG in r.tags)]
+    tags = [t for t in (app.openapi_tags or []) if t.get("name") != INTERNAL_TAG]
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        openapi_version=app.openapi_version,
+        description=app.description,
+        terms_of_service=app.terms_of_service,
+        contact=app.contact,
+        license_info=app.license_info,
+        routes=routes,
+        tags=tags,
+        servers=app.servers,
+    )
+    _remove_422(schema)
+    return schema
+
+
+def _build_internal_schema(app: FastAPI) -> dict[str, Any]:
+    routes = [r for r in app.routes if isinstance(r, APIRoute) and INTERNAL_TAG in r.tags]
+    tags = [t for t in (app.openapi_tags or []) if t.get("name") == INTERNAL_TAG]
+    schema = get_openapi(
+        title=f"{app.title} - Internal",
+        version=app.version,
+        openapi_version=app.openapi_version,
+        description=app.description,
+        terms_of_service=app.terms_of_service,
+        contact=app.contact,
+        license_info=app.license_info,
+        routes=routes,
+        tags=tags,
+        servers=app.servers,
+    )
+    _remove_422(schema)
+    return schema
+
+
+def setup_openapi(app: FastAPI) -> None:
+    """Configure split OpenAPI specs and register internal doc endpoints.
+
+    The default spec (/docs, /openapi.json) excludes Internal-tagged routes.
+    The internal spec (/internal/openapi.json, /internal/docs, /internal/redoc)
+    contains only Internal-tagged routes.
+
+    Also removes 422 responses replaced by 400 via our exception handler.
     See https://github.com/fastapi/fastapi/discussions/6695
     """
+    _internal_schema: dict[str, Any] | None = None
 
     def custom_openapi() -> dict[str, Any]:
         if app.openapi_schema:
             return app.openapi_schema  # pragma: no cover
-
-        app.openapi_schema = get_openapi(
-            title=app.title,
-            version=app.version,
-            openapi_version=app.openapi_version,
-            description=app.description,
-            terms_of_service=app.terms_of_service,
-            contact=app.contact,
-            license_info=app.license_info,
-            routes=app.routes,
-            tags=app.openapi_tags,
-            servers=app.servers,
-        )
-        for method_item in app.openapi_schema.get("paths", {}).values():
-            for param in method_item.values():
-                responses = param.get("responses", {})
-                # remove 422 response, also can remove other status code
-                responses.pop("422", None)
+        app.openapi_schema = _build_default_schema(app)
         return app.openapi_schema
 
+    def internal_openapi() -> dict[str, Any]:
+        nonlocal _internal_schema
+        if _internal_schema is None:
+            _internal_schema = _build_internal_schema(app)
+        return _internal_schema
+
     app.openapi = custom_openapi  # ty:ignore[invalid-assignment]
+
+    @app.get("/internal/openapi.json", include_in_schema=False)
+    async def internal_openapi_schema() -> Response:
+        return Response(content=json.dumps(internal_openapi()), media_type="application/json")
+
+    @app.get("/internal/docs", include_in_schema=False)
+    async def internal_docs() -> HTMLResponse:
+        return get_swagger_ui_html(
+            openapi_url="/internal/openapi.json", title=f"{app.title} - Internal Docs"
+        )
+
+    @app.get("/internal/redoc", include_in_schema=False)
+    async def internal_redoc() -> HTMLResponse:
+        return get_redoc_html(
+            openapi_url="/internal/openapi.json", title=f"{app.title} - Internal Docs"
+        )
 
 
 @asynccontextmanager
@@ -110,13 +170,13 @@ app = FastAPI(
         "identifier": "BSD-3-Clause",
     },
     openapi_tags=[
-        {"name": "Internal", "description": "Internal APIs not for external uses"},
-        {"name": "Application State", "description": "Application State Operations"},
+        {"name": INTERNAL_TAG, "description": "Internal APIs not for external uses"},
+        {"name": STATE_TAG, "description": "Application State Operations"},
     ],
     lifespan=lifespan,
     root_path=settings.root_path,
 )
-customize_openapi(app)
+setup_openapi(app)
 
 # Register exceptions handlers
 register_exception_handlers(app)
@@ -133,9 +193,8 @@ app.add_middleware(
 )
 
 # Register routes
-app.include_router(checker.router)
+app.include_router(internal.router)
 app.include_router(state.router)
-
 
 # Setup OTEL instrumentation
 initialize_instrumentation(app)
