@@ -85,7 +85,7 @@ app = FastAPI(
     lifespan=lifespan,
     root_path=settings.root_path,
 )
-if settings.publish_openapi_spec:
+if settings.publish_openapi_spec:  # pragma: no cover
     setup_openapi(app)
 
 # Register exceptions handlers

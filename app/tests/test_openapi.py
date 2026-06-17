@@ -88,6 +88,26 @@ def test_internal_redoc(client: TestClient):
     assert response.headers["content-type"].startswith("text/html")
 
 
+def test_default_spec_has_no_422_responses(client: TestClient):
+    spec = client.get("openapi.json").json()
+
+    for path, methods in spec.get("paths", {}).items():
+        for method, operation in methods.items():
+            assert "422" not in operation.get("responses", {}), (
+                f"422 response found at {method.upper()} {path}"
+            )
+
+
+def test_internal_spec_has_no_422_responses(client: TestClient):
+    spec = client.get("internal/openapi.json").json()
+
+    for path, methods in spec.get("paths", {}).items():
+        for method, operation in methods.items():
+            assert "422" not in operation.get("responses", {}), (
+                f"422 response found at {method.upper()} {path}"
+            )
+
+
 # NOTE: we cannot test whether the internal spec is not served when disabled,
 # as the application is initialized before the settings are mocked. So this
 # that to do this test we would need to change the application and do the

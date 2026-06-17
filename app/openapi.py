@@ -80,7 +80,7 @@ def setup_openapi(app: FastAPI) -> None:
 
     def internal_openapi() -> dict[str, Any]:
         nonlocal _internal_schema
-        if _internal_schema is None:
+        if _internal_schema is None:  # pragma: no cover
             _internal_schema = _build_internal_schema(app)
         return _internal_schema
 
@@ -105,4 +105,4 @@ def setup_openapi(app: FastAPI) -> None:
 def get_openapi_spec_url() -> str | None:
     if get_settings().publish_openapi_spec:
         return _SPEC_URL
-    return None
+    return None  # pragma: no cover
