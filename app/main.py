@@ -102,6 +102,7 @@ app.add_middleware(
     max_age=settings.cors_max_age,
 )
 
+
 # Register routes
 app.include_router(internal.router)
 app.include_router(state.router)
