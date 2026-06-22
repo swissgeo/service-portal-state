@@ -89,6 +89,7 @@ class StateV1(BaseModel):
     layers: list[LayerState] = Field(
         default_factory=list, description="List of layers to be displayed on the map"
     )
+    bg_layer: LayerState | None = Field(default=None, description="The Background Layer")
 
 
 State = StateV1
