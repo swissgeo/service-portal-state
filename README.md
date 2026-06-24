@@ -22,6 +22,7 @@ Service portal state is the new shared application state backend service for SWI
     - [FastAPI auto-instrumentation metrics](#fastapi-auto-instrumentation-metrics)
   - [Logging implementation](#logging-implementation)
   - [Local OTEL testing](#local-otel-testing)
+  - [Viewing custom metrics in Prometheus](#viewing-custom-metrics-in-prometheus)
 
 ## Development
 
@@ -251,3 +252,43 @@ OpenTelemetry collector endpoint created via `make start-otel`.
 
 Then you will see OTEL logs and metrics in the first shell in which you started `make start-otel` and
 you can see the full trace using `jaeger` trace explorer at http://localhost:16686
+
+### Viewing custom metrics in Prometheus
+
+The local stack forwards OTEL metrics from the collector to Prometheus via OTLP. Once the stack is
+running, open the Prometheus UI at http://localhost:9090.
+
+Custom application metrics follow the OpenTelemetry naming convention and are automatically
+translated to Prometheus metric names by replacing `.` with `_`. For example, the
+`service_portal_state.collisions` counter becomes `service_portal_state_collisions_total` in
+Prometheus (Prometheus appends `_total` to all counter metrics).
+
+To query it:
+
+1. Open http://localhost:9090 in your browser.
+2. Click the **"Metrics Explorer"** icon (or type directly in the search bar).
+3. Enter the metric name in the expression field:
+
+    ```promql
+    service_portal_state_collisions_total
+    ```
+
+4. Click **"Execute"** to see the current value, or switch to the **"Graph"** tab to visualize it
+   over time.
+
+To filter by a specific label (e.g. only collisions on a given endpoint):
+
+```promql
+service_portal_state_collisions_total{http_route="/api/state/{uuid}"}
+```
+
+To see the per-second rate over the last 5 minutes:
+
+```promql
+rate(service_portal_state_collisions_total[5m])
+```
+
+> [!TIP]
+> If the metric does not appear, make sure you have triggered at least one collision (Prometheus only
+> exposes a metric after it has been observed at least once) and that the OTLP pipeline is healthy
+> (check the otel-collector logs for export errors).

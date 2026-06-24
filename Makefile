@@ -171,12 +171,14 @@ stop-moto: ## Stop the moto server container
 .PHONY: start-otel
 start-otel: docker-network ## Run otel collector and jaeger trace analyzer locally
 	docker compose up -d jaeger
+	docker compose up -d prometheus
 	docker compose up otel-collector
 
 
 .PHONY: stop-otel
 stop-otel: ## Stop the otel collector and jaeger trace analyzer
 	docker compose down jaeger
+	docker compose down prometheus
 	docker compose down otel-collector
 
 

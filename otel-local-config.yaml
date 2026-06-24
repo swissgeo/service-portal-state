@@ -12,6 +12,8 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
   debug/traces:
     verbosity: detailed
 
@@ -34,4 +36,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug/metrics]
+      exporters: [debug/metrics, otlphttp/prometheus]
