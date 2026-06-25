@@ -252,7 +252,7 @@ running, open the Prometheus UI at http://localhost:9090.
 
 Custom application metrics follow the OpenTelemetry naming convention and are automatically
 translated to Prometheus metric names by replacing `.` with `_`. For example, the
-`service_portal_state.collisions` counter becomes `service_portal_state_collisions_total` in
+`swissgeo.service_portal_state.collisions` counter becomes `swissgeo_service_portal_state_collisions_total` in
 Prometheus (Prometheus appends `_total` to all counter metrics).
 
 To query it:
@@ -271,13 +271,13 @@ To query it:
 To filter by a specific label (e.g. only collisions on a given endpoint):
 
 ```promql
-service_portal_state_collisions_total{http_route="/api/state/{uuid}"}
+swissgeo_service_portal_state_collisions_total{http_route="/api/state/{uuid}"}
 ```
 
 To see the per-second rate over the last 5 minutes:
 
 ```promql
-rate(service_portal_state_collisions_total[5m])
+rate(swissgeo_service_portal_state_collisions_total[5m])
 ```
 
 > [!TIP]

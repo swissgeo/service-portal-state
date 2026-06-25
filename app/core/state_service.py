@@ -117,6 +117,10 @@ class StateService:
             )  # pragma: no cover
 
         if existing_item.full_hash != full_hash:
+            # When a collision happens, we need to analyze the collision and take measures.
+            # In heory, we should never have collisions, but if we start to have collisions,
+            # we need to take immediate measures. The metrics will help us monitor and alert
+            # us when collisions occur.
             increment_collision_meter(1)
             logger.exception(
                 "Collision detected for state_id=%s: existing hash=%s, new hash=%s",

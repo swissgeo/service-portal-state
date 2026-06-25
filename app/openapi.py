@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from typing import Any, cast
+from typing import Any
 
 from fastapi import FastAPI, Response, routing
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
@@ -26,7 +26,7 @@ def _build_default_schema(app: FastAPI) -> dict[str, Any]:
         r
         for r in routing.iter_route_contexts(app.routes)
         if isinstance(r.original_route, routing.APIRoute)
-        and INTERNAL_TAG not in cast("routing.APIRoute", r).tags
+        and INTERNAL_TAG not in r.original_route.tags
     ]
     tags = [t for t in (app.openapi_tags or []) if t.get("name") != INTERNAL_TAG]
     schema = get_openapi(
@@ -49,8 +49,7 @@ def _build_internal_schema(app: FastAPI) -> dict[str, Any]:
     routes = [
         r
         for r in routing.iter_route_contexts(app.routes)
-        if isinstance(r.original_route, routing.APIRoute)
-        and INTERNAL_TAG in cast("routing.APIRoute", r).tags
+        if isinstance(r.original_route, routing.APIRoute) and INTERNAL_TAG in r.original_route.tags
     ]
     tags = [t for t in (app.openapi_tags or []) if t.get("name") == INTERNAL_TAG]
     schema = get_openapi(
