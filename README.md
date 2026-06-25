@@ -44,13 +44,13 @@ To create and activate a virtual Python environment with all dependencies instal
 make setup
 ```
 
-Then run the moto-server (used for DynamoDB)
+Then run the moto-server (used for DynamoDB) and OTEL dependencies
 
 ```bash
-make start-moto
+make docker-compose-up
 ```
 
-Then run the server
+Then run the server from a separate terminal
 
 ```bash
 make serve
