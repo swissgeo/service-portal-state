@@ -170,42 +170,34 @@ the **old** HTTP semconv attribute names.
 
 | Metric name | Type | Unit | Description |
 |---|---|---|---|
-| `http.server.duration` | Histogram | `ms` | Duration of inbound HTTP requests |
-| `http.server.request.size` | Histogram | `By` | Size of HTTP request messages (compressed) |
-| `http.server.response.size` | Histogram | `By` | Size of HTTP response messages (compressed) |
+| `http.server.request.duration` | Histogram | `s` | Duration of inbound HTTP requests |
+| `http.server.request.body.size` | Histogram | `By` | Size of HTTP request messages (compressed) |
+| `http.server.response.body.size` | Histogram | `By` | Size of HTTP response messages (compressed) |
 | `http.server.active_requests` | UpDownCounter | `{request}` | Number of currently in-flight HTTP requests |
 
-Attributes attached to `http.server.duration`, `http.server.request.size`, and
-`http.server.response.size`:
+Attributes attached to `http.server.request.duration`, `http.server.request.body.size`, and
+`http.server.response.body.size`:
 
 | Attribute | Example | Description |
 |---|---|---|
-| `http.method` | `GET` | HTTP request method |
-| `http.host` | `localhost:8000` | Host header value |
-| `http.scheme` | `http` | URL scheme |
-| `http.status_code` | `200` | HTTP response status code |
-| `http.flavor` | `1.1` | HTTP protocol version |
-| `net.host.name` | `localhost` | Server host name |
-| `net.host.port` | `8000` | Server port |
+| `url.scheme` | `http` | URL scheme |
+| `network.protocol.version` | `1.1` | Network protocol version |
+| `http.request.method` | `GET` | HTTP request method |
+| `http.route` | `/` or `/{state_id}` | HTTP route |
+| `http.response.status_code` | `200` | HTTP response status code |
+
 
 Attributes attached to `http.server.active_requests`:
 
 | Attribute | Example |
 |---|---|
-| `http.method` | `GET` |
-| `http.host` | `localhost:8000` |
-| `http.scheme` | `http` |
-| `http.flavor` | `1.1` |
+| `http.request.method` | `GET` |
+| `url.scheme` | `http` |
 
 > [!NOTE]
-> To switch to the new stable HTTP semantic conventions (e.g. `http.request.method`,
-> `http.response.status_code`, `http.route`) and the `http.server.request.duration` histogram
-> (unit `s`), set `OTEL_SEMCONV_STABILITY_OPT_IN=http` in your environment. Use
+> The metrics above are from the new semantic convention for HTTP. They need to be enabled by setting `OTEL_SEMCONV_STABILITY_OPT_IN=http` in your environment. Use
 > `OTEL_SEMCONV_STABILITY_OPT_IN=http/dup` to emit both old and new metrics simultaneously
 > during a migration.
-
-> [!WARNING] 
-> Currently the `opentelemetry-instrumentation-fastapi` does not support the latest 0.137.0 FastAPI version. This version introduced a router breaking changes. Due to this breaking change if we use `OTEL_SEMCONV_STABILITY_OPT_IN=http`, the attribute `http.route` will be populated with the `path` instead of the `route`. This lead to high cardinality as the path contains the state ID !
 
 In production deployments, telemetry can be exported using the configured OTLP exporters,
 typically to an OpenTelemetry Collector or any OTLP-compatible observability platform. Only the OTLP
