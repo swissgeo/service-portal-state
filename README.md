@@ -17,8 +17,12 @@ Service portal state is the new shared application state backend service for SWI
     - [DynamoDB mocking](#dynamodb-mocking)
 - [OpenAPI](#openapi)
 - [Observability](#observability)
+  - [Metrics](#metrics)
+    - [Custom metrics](#custom-metrics)
+    - [FastAPI auto-instrumentation metrics](#fastapi-auto-instrumentation-metrics)
   - [Logging implementation](#logging-implementation)
   - [Local OTEL testing](#local-otel-testing)
+  - [Viewing custom metrics in Prometheus](#viewing-custom-metrics-in-prometheus)
 
 ## Development
 
@@ -40,13 +44,13 @@ To create and activate a virtual Python environment with all dependencies instal
 make setup
 ```
 
-Then run the moto-server (used for DynamoDB)
+Then run the moto-server (used for DynamoDB) and OTEL dependencies
 
 ```bash
-make start-moto
+make docker-compose-up
 ```
 
-Then run the server
+Then run the server from a separate terminal
 
 ```bash
 make serve
@@ -144,6 +148,57 @@ And then open:
 
 The service supports OpenTelemetry logging, tracing, and metrics.
 
+### Metrics
+
+#### Custom metrics
+
+| Metric name | Type | Unit | Description |
+|---|---|---|---|
+| `swissgeo.service_portal_state.collisions` | Counter | `{collision}` | Counts hash collisions detected when two different state payloads produce the same short ID. Incremented by 1 on a real collision, and by 0 on a same-ID / same-hash hit (to ensure the metric is always reported). |
+
+This metric has no additional attributes beyond the default OTEL resource attributes (e.g.
+`service.name`).
+
+In Prometheus the counter becomes `swissgeo_service_portal_state_collisions_total` (dots replaced
+by underscores, `_total` suffix added automatically).
+
+#### FastAPI auto-instrumentation metrics
+
+The `FastAPIInstrumentor` (backed by `opentelemetry-instrumentation-asgi`) emits the following
+metrics automatically for every HTTP request. The default semantic-convention mode (`DEFAULT`) uses
+the **old** HTTP semconv attribute names.
+
+| Metric name | Type | Unit | Description |
+|---|---|---|---|
+| `http.server.request.duration` | Histogram | `s` | Duration of inbound HTTP requests |
+| `http.server.request.body.size` | Histogram | `By` | Size of HTTP request messages (compressed) |
+| `http.server.response.body.size` | Histogram | `By` | Size of HTTP response messages (compressed) |
+| `http.server.active_requests` | UpDownCounter | `{request}` | Number of currently in-flight HTTP requests |
+
+Attributes attached to `http.server.request.duration`, `http.server.request.body.size`, and
+`http.server.response.body.size`:
+
+| Attribute | Example | Description |
+|---|---|---|
+| `url.scheme` | `http` | URL scheme |
+| `network.protocol.version` | `1.1` | Network protocol version |
+| `http.request.method` | `GET` | HTTP request method |
+| `http.route` | `/` or `/{state_id}` | HTTP route |
+| `http.response.status_code` | `200` | HTTP response status code |
+
+
+Attributes attached to `http.server.active_requests`:
+
+| Attribute | Example |
+|---|---|
+| `http.request.method` | `GET` |
+| `url.scheme` | `http` |
+
+> [!NOTE]
+> The metrics above are from the new semantic convention for HTTP. They need to be enabled by setting `OTEL_SEMCONV_STABILITY_OPT_IN=http` in your environment. Use
+> `OTEL_SEMCONV_STABILITY_OPT_IN=http/dup` to emit both old and new metrics simultaneously
+> during a migration.
+
 In production deployments, telemetry can be exported using the configured OTLP exporters,
 typically to an OpenTelemetry Collector or any OTLP-compatible observability platform. Only the OTLP
 exportert is currently implemented by the application configuration layer.
@@ -189,3 +244,43 @@ OpenTelemetry collector endpoint created via `make start-otel`.
 
 Then you will see OTEL logs and metrics in the first shell in which you started `make start-otel` and
 you can see the full trace using `jaeger` trace explorer at http://localhost:16686
+
+### Viewing custom metrics in Prometheus
+
+The local stack forwards OTEL metrics from the collector to Prometheus via OTLP. Once the stack is
+running, open the Prometheus UI at http://localhost:9090.
+
+Custom application metrics follow the OpenTelemetry naming convention and are automatically
+translated to Prometheus metric names by replacing `.` with `_`. For example, the
+`swissgeo.service_portal_state.collisions` counter becomes `swissgeo_service_portal_state_collisions_total` in
+Prometheus (Prometheus appends `_total` to all counter metrics).
+
+To query it:
+
+1. Open http://localhost:9090 in your browser.
+2. Click the **"Metrics Explorer"** icon (or type directly in the search bar).
+3. Enter the metric name in the expression field:
+
+    ```promql
+    service_portal_state_collisions_total
+    ```
+
+4. Click **"Execute"** to see the current value, or switch to the **"Graph"** tab to visualize it
+   over time.
+
+To filter by a specific label (e.g. only collisions on a given endpoint):
+
+```promql
+swissgeo_service_portal_state_collisions_total{http_route="/api/state/{uuid}"}
+```
+
+To see the per-second rate over the last 5 minutes:
+
+```promql
+rate(swissgeo_service_portal_state_collisions_total[5m])
+```
+
+> [!TIP]
+> If the metric does not appear, make sure you have triggered at least one collision (Prometheus only
+> exposes a metric after it has been observed at least once) and that the OTLP pipeline is healthy
+> (check the otel-collector logs for export errors).

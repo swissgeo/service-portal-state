@@ -2,11 +2,10 @@ import json
 from functools import lru_cache
 from typing import Any
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, routing
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
-from fastapi.routing import APIRoute
 
 from app.api.internal import INTERNAL_TAG
 from app.settings import get_settings
@@ -23,7 +22,12 @@ def _remove_422(schema: dict[str, Any]) -> None:
 
 
 def _build_default_schema(app: FastAPI) -> dict[str, Any]:
-    routes = [r for r in app.routes if not (isinstance(r, APIRoute) and INTERNAL_TAG in r.tags)]
+    routes = [
+        r
+        for r in routing.iter_route_contexts(app.routes)
+        if isinstance(r.original_route, routing.APIRoute)
+        and INTERNAL_TAG not in r.original_route.tags
+    ]
     tags = [t for t in (app.openapi_tags or []) if t.get("name") != INTERNAL_TAG]
     schema = get_openapi(
         title=app.title,
@@ -42,7 +46,11 @@ def _build_default_schema(app: FastAPI) -> dict[str, Any]:
 
 
 def _build_internal_schema(app: FastAPI) -> dict[str, Any]:
-    routes = [r for r in app.routes if isinstance(r, APIRoute) and INTERNAL_TAG in r.tags]
+    routes = [
+        r
+        for r in routing.iter_route_contexts(app.routes)
+        if isinstance(r.original_route, routing.APIRoute) and INTERNAL_TAG in r.original_route.tags
+    ]
     tags = [t for t in (app.openapi_tags or []) if t.get("name") == INTERNAL_TAG]
     schema = get_openapi(
         title=f"{app.title} - Internal",

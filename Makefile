@@ -63,7 +63,7 @@ ci: .env
 
 
 .PHONY: setup
-setup: .env start-moto start-otel ## Create virtualenv with all packages for development
+setup: .env docker-network ## Create virtualenv with all packages for development
 	uv sync
 	$(PRE_COMMIT) install
 	# Start a new shell with the virtualenv activated and the .env file loaded into the environment
@@ -171,13 +171,25 @@ stop-moto: ## Stop the moto server container
 .PHONY: start-otel
 start-otel: docker-network ## Run otel collector and jaeger trace analyzer locally
 	docker compose up -d jaeger
+	docker compose up -d prometheus
 	docker compose up otel-collector
 
 
 .PHONY: stop-otel
 stop-otel: ## Stop the otel collector and jaeger trace analyzer
 	docker compose down jaeger
+	docker compose down prometheus
 	docker compose down otel-collector
+
+
+.PHONY: docker-compose-up
+docker-compose-up: docker-network ## Start local dependencies (moto and otel)
+	docker compose --env-file=${ENV_FILE} up --remove-orphans
+
+
+.PHONY: docker-compose-down
+docker-compose-down: ## Stop local dependencies (moto and otel)
+	docker compose --env-file=${ENV_FILE} down --remove-orphans --rmi local
 
 
 .PHONY: help

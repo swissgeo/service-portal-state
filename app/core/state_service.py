@@ -3,12 +3,13 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from botocore.exceptions import ClientError
-from opentelemetry import metrics, trace
+from opentelemetry import trace
 from types_aiobotocore_dynamodb import DynamoDBClient
 
 from fastapi import Depends
 
 from app.core.db import DynamoDBClientDep, basemodel_to_dynamodb, dynamodb_to_basemodel, get_key
+from app.core.metrics import increment_collision_meter
 from app.schemas.db import DBStateItem
 from app.schemas.state import StateId, StateItem
 from app.settings import SettingsDep
@@ -16,11 +17,6 @@ from app.settings import SettingsDep
 logger = logging.getLogger(__name__)
 
 tracer = trace.get_tracer(__name__)
-
-meter = metrics.get_meter(__name__)
-collision_meter = meter.create_counter(
-    "portal.state.collision", unit="1", description="Hash collision counter"
-)
 
 
 class StateService:
@@ -121,7 +117,11 @@ class StateService:
             )  # pragma: no cover
 
         if existing_item.full_hash != full_hash:
-            collision_meter.add(1, {"state.full_hash": full_hash, "state.id": state_id})
+            # When a collision happens, we need to analyze the collision and take measures.
+            # In theory, we should never have collisions, but if we start to have collisions,
+            # we need to take immediate measures. The metrics will help us monitor and alert
+            # us when collisions occur.
+            increment_collision_meter(1)
             logger.exception(
                 "Collision detected for state_id=%s: existing hash=%s, new hash=%s",
                 state_id,
@@ -129,6 +129,9 @@ class StateService:
                 full_hash,
             )
             raise ValueError(f"Collision detected for id={state_id}")
+        # In case there is no collision, we still need to increment the meter to 0 in order to
+        # add a value to the meter, otherwise the meter will not record any values.
+        increment_collision_meter(0)
 
 
 # FastAPI dependency injection function and definitions
