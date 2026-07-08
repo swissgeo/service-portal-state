@@ -2123,7 +2123,7 @@ dev = [
 requires-dist = [
     { name = "aioboto3", specifier = "~=15.5.0" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.135" },
-    { name = "httptools", specifier = ">=0.8.0" },
+    { name = "httptools", specifier = "~=0.8.0" },
     { name = "opentelemetry-exporter-otlp", specifier = "~=1.43" },
     { name = "opentelemetry-instrumentation-asgi", specifier = "==0.64b0" },
     { name = "opentelemetry-instrumentation-botocore", specifier = "==0.64b0" },
@@ -2133,7 +2133,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = "~=2.13" },
     { name = "pyyaml", specifier = "~=6.0" },
     { name = "types-aiobotocore", extras = ["dynamodb"], specifier = "~=3.4" },
-    { name = "uvloop", specifier = ">=0.22.1" },
+    { name = "uvloop", specifier = "~=0.22.1" },
 ]
 
 [package.metadata.requires-dev]
