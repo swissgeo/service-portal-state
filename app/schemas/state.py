@@ -19,7 +19,7 @@ class MapState(BaseModel):
         examples=[(2660000, 1190000)],
     )
     zoom: float | None = Field(
-        default=None, description="Zoom level of the map", examples=[1], ge=1, le=13
+        default=None, description="Zoom level of the map", examples=[1], ge=0, le=13
     )
     rotation: float | None = Field(
         default=None,
