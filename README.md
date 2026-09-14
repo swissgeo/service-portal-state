@@ -16,6 +16,7 @@ Service portal state is the new shared application state backend service for SWI
   - [Testing](#testing)
     - [DynamoDB mocking](#dynamodb-mocking)
 - [OpenAPI](#openapi)
+- [Synthetic checks](#synthetic-checks)
 - [Observability](#observability)
   - [Metrics](#metrics)
     - [Custom metrics](#custom-metrics)
@@ -143,6 +144,13 @@ And then open:
 
 - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for Swagger
 - [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) for Redoc
+
+## Synthetic checks
+
+The service exposes a `GET /api/wps/v1/state/syntheticz` endpoint, used by the platform
+monitoring agent to black-box check the service and its external dependencies. It follows the
+[Synthetic checks in SWISSGEO](https://swissgeoplatform.atlassian.net/wiki/spaces/GEOIN/pages/826769409/Synthetic+checks+in+SWISSGEO)
+guideline.
 
 ## Observability
 
