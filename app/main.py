@@ -18,6 +18,8 @@ from app.middlewares.canonical_hash import CanonicalHashMiddleware
 from app.openapi import get_openapi_spec_url, setup_openapi
 from app.otel import initialize_instrumentation, shutdown_otel
 from app.settings import get_settings
+from app.syntheticz import setup_syntheticz
+from app.syntheticz_check import syntheticz_check
 from app.version import __version__
 
 logger = logging.getLogger(__name__)
@@ -105,6 +107,18 @@ app.add_middleware(
 
 # Register routes
 app.include_router(internal.router)
+
+# Register the synthetic check endpoint, see app/syntheticz/README.md.
+# NOTE: this MUST be registered before the state router, otherwise the state router catch-all
+# `GET /{state_id}` route shadows `GET /syntheticz`.
+setup_syntheticz(
+    app,
+    check=syntheticz_check,
+    version=__version__,
+    path=settings.syntheticz_path,
+    tags=[INTERNAL_TAG],
+)
+
 app.include_router(state.router)
 
 # Setup OTEL instrumentation

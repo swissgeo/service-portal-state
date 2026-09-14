@@ -11,6 +11,8 @@ import pytest
 from app.core.db import get_dynamodb_client
 from app.version import __version__
 
+SERVICE_NAME = "service-portal-state"
+
 
 class MockDescribeTableFactory(Protocol):
     def __call__(self, client_error: dict | None = None) -> AsyncMock: ...
@@ -41,7 +43,7 @@ def test_api_syntheticz_endpoint_healthy(client: TestClient):
         f"Unexpected response {response.status_code}: {response.json()}"
     )
     assert response.json() == {
-        "service": {"name": "service-portal-state", "version": __version__},
+        "service": {"name": SERVICE_NAME, "version": __version__},
         "status": "UP",
         "external_systems": {"dynamodb": {"status": "UP"}},
     }
@@ -73,7 +75,7 @@ def test_api_syntheticz_endpoint_dynamodb_down(
 
     assert response.status_code == 500
     assert response.json() == {
-        "service": {"name": "service-portal-state", "version": __version__},
+        "service": {"name": SERVICE_NAME, "version": __version__},
         "status": "DOWN",
         "external_systems": {"dynamodb": {"status": "DOWN"}},
     }
@@ -98,3 +100,14 @@ def test_syntheticz_route_is_internal_only(client: TestClient):
 
     assert "/syntheticz" not in spec["paths"]
     assert "/syntheticz" in internal_spec["paths"]
+
+
+def test_syntheticz_route_is_not_shadowed_by_state_route(client: TestClient):
+    """`/syntheticz` must not be captured by the state router catch-all `GET /{state_id}`.
+
+    This depends on the registration order in app/main.py.
+    """
+    response = client.get("/syntheticz")
+
+    assert response.status_code == 200
+    assert "external_systems" in response.json()

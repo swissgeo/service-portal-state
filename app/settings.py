@@ -21,6 +21,11 @@ class Settings(BaseSettings):
 
     root_path: str = ""
 
+    # Route path of the synthetic check endpoint. It is relative to `root_path`, which
+    # FastAPI prepends, so the default is served at <root_path>/syntheticz e.g.
+    # /api/wps/v1/state/syntheticz.
+    syntheticz_path: str = "/syntheticz"
+
     # OpenAPI settings
     publish_openapi_spec: bool = False
 
