@@ -107,6 +107,52 @@ from app.tests.conftest import MockGetItemFactory, MockPutItemFactory
                 },
             },
         },
+        {
+            "state": {
+                "map": {
+                    "center": [2660000, 1190000],
+                    "zoom": 1,
+                    "rotation": 0,
+                },
+                "layers": [
+                    {
+                        "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                        "type": "dataset",
+                        "isVisible": True,
+                        "opacity": 0.75,
+                        "dimensions": {"time": {"currentValue": "current"}},
+                        "features": ["id-1", "id-2", "id-34510"],
+                    }
+                ],
+                "bg_layer": {
+                    "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                    "type": "dataset",
+                },
+            },
+        },
+        {
+            "state": {
+                "map": {
+                    "center": [2660000, 1190000],
+                    "zoom": 1,
+                    "rotation": 0,
+                },
+                "layers": [
+                    {
+                        "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                        "type": "dataset",
+                        "isVisible": True,
+                        "opacity": 0.75,
+                        "dimensions": {"time": {"currentValue": "current"}},
+                        "features": [],
+                    }
+                ],
+                "bg_layer": {
+                    "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                    "type": "dataset",
+                },
+            },
+        },
     ],
 )
 def test_save_app_state(client: TestClient, payload: dict):
