@@ -5,7 +5,13 @@ Reusable FastAPI plugin implementing the SWISSGEO
 
 The package has no dependency on this service, it can be copied as-is into any FastAPI service.
 
-## Usage
+## Installation
+
+1. Add `app/syntheticz` to your project
+2. Write a `check` function: a function that returns the healthy external system names
+3. Pass the `check` function to `setup_syntheticz`
+
+## Usage example
 
 ```python
 from app.syntheticz import SyntheticError, setup_syntheticz

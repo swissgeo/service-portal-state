@@ -152,44 +152,6 @@ monitoring agent to black-box check the service and its external dependencies. I
 [Synthetic checks in SWISSGEO](https://swissgeoplatform.atlassian.net/wiki/spaces/GEOIN/pages/826769409/Synthetic+checks+in+SWISSGEO)
 guideline.
 
-- `200` when the service and all external systems are healthy
-- `500` when any external system is unhealthy; the body identifies which one
-
-Example response:
-
-```json
-{
-  "service": {
-    "name": "service-portal-state",
-    "version": "v0.1.0"
-  },
-  "status": "UP",
-  "external_systems": {
-    "dynamodb": {
-      "status": "UP"
-    }
-  }
-}
-```
-
-The response is served with `Cache-Control: no-store` so that CloudFront never returns a cached
-check result.
-
-This endpoint must not be used for kubernetes probes, use `/checker` for those.
-
-### Check scope and limitations
-
-The only external system of this service is the DynamoDB state table. It is checked with a
-`DescribeTable` call, which is read-only and therefore leaves no state behind, making the check
-idempotent and free of side effects.
-
-The limitation of this approach is that `DescribeTable` is served by the DynamoDB control plane:
-it proves that the table exists and that the service can reach and authenticate against DynamoDB,
-but it does not exercise the data plane (`GetItem`/`PutItem`). A data plane read of a well-known
-item would be a deeper check, but it would require a dedicated item to be provisioned and kept in
-the table. A write-based smoke test is deliberately not implemented, as it could not be made
-idempotent without deleting the written item afterwards.
-
 ## Observability
 
 The service supports OpenTelemetry logging, tracing, and metrics.
