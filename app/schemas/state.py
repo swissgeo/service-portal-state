@@ -2,7 +2,7 @@ import math
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import AnyUrl, BaseModel, Field, PositiveFloat
+from pydantic import AnyUrl, BaseModel, Field, PositiveFloat, StringConstraints
 
 CoordinateX = Annotated[
     PositiveFloat, Field(description="Coordinate x in LV95 / EPSG:2056 (meters)")
@@ -80,7 +80,8 @@ class LayerState(BaseModel):
         default_factory=LayerDimensionsState,
         description="Dimensions of the layer (e.g. time dimension with current value)",
     )
-    features: list[str] | None = Field(
+    features: list[Annotated[str, StringConstraints(max_length=20)]] | None = Field(
+        max_length=50,
         default=None,
         description="Features currently selected through identify in this layer",
     )
