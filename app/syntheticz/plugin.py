@@ -1,4 +1,5 @@
 import logging
+import os
 from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Annotated, Any
@@ -14,7 +15,6 @@ from app.syntheticz.schemas import (
     SyntheticzService,
     SyntheticzStatus,
 )
-from app.syntheticz.settings import SyntheticzSettings
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +27,19 @@ SYNTHETIC_ATTRIBUTE = "synthetic"
 
 DEFAULT_PATH = "/syntheticz"
 
+# Environment variable used when no explicit name is passed to the plugin.
+SERVICE_NAME_ENV_VAR = "SERVICE_NAME"
+
 # A synthetic check function. It may be sync or async and may declare FastAPI dependencies.
 # It returns the healthy external systems (a list of names, or a mapping already built by the
 # caller), or None when the service has no external system to report. It raises SyntheticError
 # when one or more external systems are unhealthy.
 SyntheticCheck = Callable[..., Awaitable[Any] | Any]
+
+
+def _service_name(name: str | None) -> str:
+    """Return the explicit name, or fall back to the SERVICE_NAME environment variable."""
+    return name or os.environ.get(SERVICE_NAME_ENV_VAR, "unknown-service")
 
 
 async def mark_synthetic_span() -> None:
@@ -60,8 +68,8 @@ def build_syntheticz_router(
     check: SyntheticCheck,
     version: str,
     *,
+    name: str | None = None,
     path: str = DEFAULT_PATH,
-    settings: SyntheticzSettings | None = None,
     tags: list[str | Enum] | None = None,
 ) -> APIRouter:
     """Build the router exposing the synthetic check endpoint.
@@ -71,20 +79,17 @@ def build_syntheticz_router(
             effects. It raises SyntheticError with the failed external systems when unhealthy,
             and returns the healthy external system names (or None) otherwise. It may be sync or
             async, and may declare FastAPI dependencies in its signature.
-        version: version of the service, used unless SERVICE_VERSION is set in the environment.
+        version: version of the service, reported as `service.version`.
+        name: name of the service, reported as `service.name`. Defaults to the SERVICE_NAME
+            environment variable.
         path: route path of the endpoint. Note that when the application sets a `root_path`, it
             is prepended by FastAPI, so this must stay relative to it.
-        settings: plugin settings, read from the environment when omitted.
         tags: OpenAPI tags for the route.
 
     Returns:
         APIRouter: a router with a single GET route serving the synthetic check.
     """
-    settings = settings or SyntheticzSettings()
-    service = SyntheticzService(
-        name=settings.service_name,
-        version=settings.service_version or version,
-    )
+    service = SyntheticzService(name=_service_name(name), version=version)
 
     # The span must be marked before the check dependency runs, hence a router level
     # dependency rather than a statement in the route handler body.
@@ -118,24 +123,21 @@ def build_syntheticz_router(
     return router
 
 
+# NOTE: all configuration arguments are keyword-only, the count is deliberate.
 def setup_syntheticz(  # noqa: PLR0913
     app: FastAPI,
     check: SyntheticCheck,
     version: str,
     *,
+    name: str | None = None,
     path: str = DEFAULT_PATH,
-    settings: SyntheticzSettings | None = None,
     tags: list[str | Enum] | None = None,
 ) -> None:
     """Register the synthetic check endpoint and its exception handler on the application.
 
     See build_syntheticz_router() for the arguments.
     """
-    settings = settings or SyntheticzSettings()
-    service = SyntheticzService(
-        name=settings.service_name,
-        version=settings.service_version or version,
-    )
+    service = SyntheticzService(name=_service_name(name), version=version)
 
     async def syntheticz_exception_handler(_request: Any, exc: Exception) -> Response:
         """Turn a SyntheticError into a 500 response carrying the per-system status."""
@@ -161,7 +163,5 @@ def setup_syntheticz(  # noqa: PLR0913
 
     app.add_exception_handler(SyntheticError, syntheticz_exception_handler)
     app.include_router(
-        build_syntheticz_router(
-            check=check, version=version, path=path, settings=settings, tags=tags
-        )
+        build_syntheticz_router(check=check, version=version, name=name, path=path, tags=tags)
     )

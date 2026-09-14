@@ -15,22 +15,26 @@ Usage:
 """
 
 from app.syntheticz.exceptions import SyntheticError
-from app.syntheticz.plugin import SYNTHETIC_ATTRIBUTE, build_syntheticz_router, setup_syntheticz
+from app.syntheticz.plugin import (
+    SERVICE_NAME_ENV_VAR,
+    SYNTHETIC_ATTRIBUTE,
+    build_syntheticz_router,
+    setup_syntheticz,
+)
 from app.syntheticz.schemas import (
     Syntheticz,
     SyntheticzExternalSystem,
     SyntheticzService,
     SyntheticzStatus,
 )
-from app.syntheticz.settings import SyntheticzSettings
 
 __all__ = [
+    "SERVICE_NAME_ENV_VAR",
     "SYNTHETIC_ATTRIBUTE",
     "SyntheticError",
     "Syntheticz",
     "SyntheticzExternalSystem",
     "SyntheticzService",
-    "SyntheticzSettings",
     "SyntheticzStatus",
     "build_syntheticz_router",
     "setup_syntheticz",

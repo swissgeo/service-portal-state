@@ -115,6 +115,7 @@ setup_syntheticz(
     app,
     check=syntheticz_check,
     version=__version__,
+    name=settings.service_name,
     path=settings.syntheticz_path,
     tags=[INTERNAL_TAG],
 )

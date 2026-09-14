@@ -49,16 +49,12 @@ Both responses carry `Cache-Control: no-store`.
 
 ## Configuration
 
-| Environment variable | Default | Description |
+| Argument | Default | Description |
 |---|---|---|
-| `SERVICE_NAME` | `unknown-service` | Reported as `service.name` |
-| `SERVICE_VERSION` | unset | Reported as `service.version`, defaults to the `version` argument |
-
-The route path defaults to `/syntheticz` and can be changed with the `path` argument:
-
-```python
-setup_syntheticz(app, check=check, version=__version__, path="/healthz/syntheticz")
-```
+| `name` | `SERVICE_NAME` env var, else `unknown-service` | Reported as `service.name` |
+| `version` | required | Reported as `service.version` |
+| `path` | `/syntheticz` | Route path of the endpoint |
+| `tags` | none | OpenAPI tags for the route |
 
 `path` is **relative to the application `root_path`**, which FastAPI prepends. With
 `root_path="/api/wps/v1/state"` the default is already served at

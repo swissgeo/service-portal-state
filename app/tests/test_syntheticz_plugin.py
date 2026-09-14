@@ -7,19 +7,14 @@ from fastapi.testclient import TestClient
 
 import pytest
 
-from app.syntheticz import SyntheticError, SyntheticzSettings, setup_syntheticz
+from app.syntheticz import SyntheticError, setup_syntheticz
 
 VERSION = "v1.2.0"
 
 
-def build_client(check: Callable, settings: SyntheticzSettings | None = None) -> TestClient:
+def build_client(check: Callable, name: str | None = "my-service") -> TestClient:
     app = FastAPI()
-    setup_syntheticz(
-        app,
-        check=check,
-        version=VERSION,
-        settings=settings or SyntheticzSettings(_env_file=None, service_name="my-service"),  # ty:ignore[unknown-argument]
-    )
+    setup_syntheticz(app, check=check, version=VERSION, name=name)
     return TestClient(app)
 
 
@@ -98,31 +93,37 @@ def test_check_function_can_declare_fastapi_dependencies():
     assert response.json()["external_systems"] == {"injected": {"status": "UP"}}
 
 
-def test_service_name_is_read_from_environment(monkeypatch: pytest.MonkeyPatch):
+def test_service_name_falls_back_to_the_environment(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SERVICE_NAME", "env-service")
 
     async def check() -> None:
         return None
 
-    response = build_client(check, settings=SyntheticzSettings(_env_file=None)).get(  # ty:ignore[unknown-argument]
-        "/syntheticz"
-    )
+    response = build_client(check, name=None).get("/syntheticz")
 
     assert response.json()["service"] == {"name": "env-service", "version": VERSION}
 
 
-def test_service_version_can_be_overridden_from_environment(monkeypatch: pytest.MonkeyPatch):
+def test_explicit_name_wins_over_the_environment(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SERVICE_NAME", "env-service")
-    monkeypatch.setenv("SERVICE_VERSION", "v9.9.9")
 
     async def check() -> None:
         return None
 
-    response = build_client(check, settings=SyntheticzSettings(_env_file=None)).get(  # ty:ignore[unknown-argument]
-        "/syntheticz"
-    )
+    response = build_client(check, name="explicit-service").get("/syntheticz")
 
-    assert response.json()["service"]["version"] == "v9.9.9"
+    assert response.json()["service"]["name"] == "explicit-service"
+
+
+def test_service_name_defaults_when_unset(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("SERVICE_NAME", raising=False)
+
+    async def check() -> None:
+        return None
+
+    response = build_client(check, name=None).get("/syntheticz")
+
+    assert response.json()["service"]["name"] == "unknown-service"
 
 
 def test_response_is_never_cached():
@@ -160,11 +161,7 @@ def test_endpoint_path_can_be_customised():
 
     app = FastAPI()
     setup_syntheticz(
-        app,
-        check=check,
-        version=VERSION,
-        path="/healthz/syntheticz",
-        settings=SyntheticzSettings(_env_file=None, service_name="my-service"),  # ty:ignore[unknown-argument]
+        app, check=check, version=VERSION, name="my-service", path="/healthz/syntheticz"
     )
     client = TestClient(app)
 
@@ -179,12 +176,7 @@ def test_path_is_relative_to_the_application_root_path():
         return None
 
     app = FastAPI(root_path="/api/wps/v1/state")
-    setup_syntheticz(
-        app,
-        check=check,
-        version=VERSION,
-        settings=SyntheticzSettings(_env_file=None, service_name="my-service"),  # ty:ignore[unknown-argument]
-    )
+    setup_syntheticz(app, check=check, version=VERSION, name="my-service")
     client = TestClient(app)
 
     assert client.get("/api/wps/v1/state/syntheticz").status_code == 200
