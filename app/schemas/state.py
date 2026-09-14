@@ -80,6 +80,10 @@ class LayerState(BaseModel):
         default_factory=LayerDimensionsState,
         description="Dimensions of the layer (e.g. time dimension with current value)",
     )
+    features: list[str] | None = Field(
+        default=None,
+        description="Features currently selected through identify in this layer",
+    )
 
 
 class StateV1(BaseModel):
