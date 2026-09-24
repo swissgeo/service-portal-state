@@ -17,7 +17,7 @@ def test_defaults(monkeypatch: pytest.MonkeyPatch):
         _env_file=None,  # ty:ignore[unknown-argument]
     )  # ty:ignore[missing-argument]
 
-    assert settings.root_path == "/api/wps/v1/state"
+    assert settings.root_path == ""
     assert settings.cors_origins == []
     assert settings.cors_method == ["GET", "POST"]
     assert settings.cors_headers == ["*"]
