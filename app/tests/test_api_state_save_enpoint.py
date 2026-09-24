@@ -153,6 +153,56 @@ from app.tests.conftest import MockGetItemFactory, MockPutItemFactory
                 },
             },
         },
+        {
+            # state with one drawing layer
+            "state": {
+                "map": {
+                    "center": [2660000, 1190000],
+                    "zoom": 1,
+                    "rotation": 0,
+                },
+                "layers": [
+                    {
+                        "drawingUrl": "https://services.swissgeo.ch/api/wps/v1/drawings/296bc1f3-df4b-4129-b9b5-a8002de2dfb1",
+                        "type": "drawing",
+                        "adminId": "2aad4bec-b32a-4f5f-bc6a-38aeee47a3d8",
+                    }
+                ],
+                "bg_layer": {
+                    "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                    "type": "dataset",
+                },
+            },
+        },
+        {
+            # state with a mix of drawing layer and normal layer
+            "state": {
+                "map": {
+                    "center": [2660000, 1190000],
+                    "zoom": 1,
+                    "rotation": 0,
+                },
+                "layers": [
+                    {
+                        "drawingUrl": "https://services.swissgeo.ch/api/wps/v1/drawings/296bc1f3-df4b-4129-b9b5-a8002de2dfb1",
+                        "type": "drawing",
+                        "adminId": "2aad4bec-b32a-4f5f-bc6a-38aeee47a3d8",
+                    },
+                    {
+                        "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                        "type": "dataset",
+                        "isVisible": True,
+                        "opacity": 0.75,
+                        "dimensions": {"time": {"currentValue": "current"}},
+                        "features": [],
+                    },
+                ],
+                "bg_layer": {
+                    "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                    "type": "dataset",
+                },
+            },
+        },
     ],
 )
 def test_save_app_state(client: TestClient, payload: dict):
@@ -215,6 +265,12 @@ def test_save_app_state_already_exists(client: TestClient, db_state_item_full: t
         {"hello world": "unexpected field"},  # unexpected top-level field
         "Not a JSON object",  # not a JSON object
         ["list instead of object"],  # not a JSON object
+        {"state": {"layers": [{"type": "garbage"}]}},  # Wrong type
+        {"state": {"layers": [{"type": "drawing"}]}},  # Missing drawingUrl
+        {
+            "state": {"layers": [{"type": "dataset", "drawingUrl": ""}]}
+        },  # drawingUrl with dataset type
+        {"state": {"layers": [{"type": "drawing", "layerUrl": ""}]}},  # layerUrl with dataset type
     ],
 )
 def test_save_app_state_invalid_payload(client: TestClient, payload: dict):
