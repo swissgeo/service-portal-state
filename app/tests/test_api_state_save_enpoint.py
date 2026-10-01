@@ -166,6 +166,8 @@ from app.tests.conftest import MockGetItemFactory, MockPutItemFactory
                         "drawingUrl": "https://services.swissgeo.ch/api/wps/v1/drawings/296bc1f3-df4b-4129-b9b5-a8002de2dfb1",
                         "type": "drawing",
                         "adminId": "2aad4bec-b32a-4f5f-bc6a-38aeee47a3d8",
+                        "opacity": 0.2,
+                        "isVisible": "true",
                     }
                 ],
                 "bg_layer": {
@@ -187,6 +189,8 @@ from app.tests.conftest import MockGetItemFactory, MockPutItemFactory
                         "drawingUrl": "https://services.swissgeo.ch/api/wps/v1/drawings/296bc1f3-df4b-4129-b9b5-a8002de2dfb1",
                         "type": "drawing",
                         "adminId": "2aad4bec-b32a-4f5f-bc6a-38aeee47a3d8",
+                        "isVisible": False,
+                        "opacity": 0.75,
                     },
                     {
                         "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
