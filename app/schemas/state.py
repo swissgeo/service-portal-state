@@ -99,6 +99,18 @@ class DrawingLayerState(BaseModel):
         default="",
         description="Admin ID for the drawing, empty string if view-only",
     )
+    is_visible: bool | None = Field(
+        alias="isVisible",
+        default=None,
+        description="Whether the drawing layer is visible on the map",
+    )
+    opacity: float | None = Field(
+        default=None,
+        description="Opacity of the drawing layer (between 0 and 1)",
+        examples=[0.75],
+        ge=0,
+        le=1,
+    )
 
 
 class StateV1(BaseModel):
