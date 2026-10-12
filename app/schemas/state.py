@@ -1,8 +1,8 @@
 import math
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import AnyUrl, BaseModel, Field, PositiveFloat
+from pydantic import AnyUrl, BaseModel, Field, PositiveFloat, StringConstraints
 
 CoordinateX = Annotated[
     PositiveFloat, Field(description="Coordinate x in LV95 / EPSG:2056 (meters)")
@@ -80,13 +80,44 @@ class LayerState(BaseModel):
         default_factory=LayerDimensionsState,
         description="Dimensions of the layer (e.g. time dimension with current value)",
     )
+    features: list[Annotated[str, StringConstraints(max_length=20)]] | None = Field(
+        max_length=50,
+        default=None,
+        description="Features currently selected through identify in this layer",
+    )
+
+
+class DrawingLayerState(BaseModel):
+    drawing_url: AnyUrl = Field(
+        alias="drawingUrl",
+        description="URL of the drawing on service-drawing",
+        examples=["https://services.dev.sgdi.tech/api/wps/v1/drawings/abcdefgh"],
+    )
+    type: Literal["drawing"] = "drawing"
+    admin_id: str = Field(
+        alias="adminId",
+        default="",
+        description="Admin ID for the drawing, empty string if view-only",
+    )
+    is_visible: bool | None = Field(
+        alias="isVisible",
+        default=None,
+        description="Whether the drawing layer is visible on the map",
+    )
+    opacity: float | None = Field(
+        default=None,
+        description="Opacity of the drawing layer (between 0 and 1)",
+        examples=[0.75],
+        ge=0,
+        le=1,
+    )
 
 
 class StateV1(BaseModel):
     """State object of the application"""
 
     map: MapState = Field(default_factory=MapState, description="State of the map")
-    layers: list[LayerState] = Field(
+    layers: list[LayerState | DrawingLayerState] = Field(
         default_factory=list, description="List of layers to be displayed on the map"
     )
     bg_layer: LayerState | None = Field(default=None, description="The Background Layer")
