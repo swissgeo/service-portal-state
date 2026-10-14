@@ -221,6 +221,7 @@ def db_state_item_full(db_table: Table) -> tuple[dict, str]:
                     "isVisible": False,
                     "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
                     "opacity": Decimal("0.75"),
+                    "selectedDistributionId": "ch.bafu.neophyten-grossbluetiges_heusenkraut",
                     "type": "dataset",
                 },
             ],

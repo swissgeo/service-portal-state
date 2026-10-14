@@ -76,6 +76,16 @@ class LayerState(BaseModel):
         ge=0,
         le=1,
     )
+    selected_distribution_id: str | None = Field(
+        alias="selectedDistributionId",
+        default=None,
+        description=(
+            "ID of the distribution currently shown on the map, for datasets with several "
+            "distributions (e.g. aggregated datasets). When absent or null, the dataset's "
+            "preferred distribution is used"
+        ),
+        examples=["ch.bafu.neophyten-grossbluetiges_heusenkraut"],
+    )
     dimensions: LayerDimensionsState = Field(
         default_factory=LayerDimensionsState,
         description="Dimensions of the layer (e.g. time dimension with current value)",
