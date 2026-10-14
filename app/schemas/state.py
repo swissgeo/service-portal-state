@@ -84,7 +84,7 @@ class LayerState(BaseModel):
             "distributions (e.g. aggregated datasets). When absent or null, the dataset's "
             "preferred distribution is used"
         ),
-        examples=["ch.bafu.neophyten-grossbluetiges_heusenkraut"],
+        examples=["ch.kgk.gefahrenkarten:wms"],
     )
     dimensions: LayerDimensionsState = Field(
         default_factory=LayerDimensionsState,
