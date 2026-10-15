@@ -45,6 +45,14 @@ def test_default_spec_excludes_internal_tag(client: TestClient):
     assert STATE_TAG in tag_names
 
 
+def test_default_spec_layer_state_has_optional_selected_distribution_id(client: TestClient):
+    spec = client.get("openapi.json").json()
+
+    layer_state = spec["components"]["schemas"]["LayerState"]
+    assert "selectedDistributionId" in layer_state["properties"]
+    assert "selectedDistributionId" not in layer_state.get("required", [])
+
+
 def test_internal_openapi_json(client: TestClient):
     response = client.get("internal/openapi.json")
 
