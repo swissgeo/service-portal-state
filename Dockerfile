@@ -7,10 +7,14 @@ ENV USER=swissgeo
 ENV GROUP=swissgeo
 ENV INSTALL_DIR=/opt/service-portal-state
 
+# updating certificates first to ensure the certificates are up to date
+# this was introduced by the oct 26 emudhra vulnerability
 RUN apt-get -qq update > /dev/null \
+    && apt-get -qq install -y --no-install-recommends ca-certificates > /dev/null \
     && apt-get -qq clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd -r ${GROUP} \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r ${GROUP} \
     && useradd -r -s /bin/false -g ${GROUP} ${USER}
 
 ###########################################################
