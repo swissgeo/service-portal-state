@@ -122,7 +122,7 @@ class StateService:
             # we need to take immediate measures. The metrics will help us monitor and alert
             # us when collisions occur.
             increment_collision_meter(1)
-            logger.exception(
+            logger.error(
                 "Collision detected for state_id=%s: existing hash=%s, new hash=%s",
                 state_id,
                 existing_item.full_hash,
