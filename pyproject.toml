@@ -80,6 +80,7 @@ ignore = [
     "ERA001", # TODO remove this for production, ignore commented code
     "COM812", # flak8-commas missing-trailing-comma is ignored to avoid conflict with formatter which enforces trailing commas
     "TRY003", # Ignore long messages in exceptions
+    "CPY001", # Ignore having to have copyrights at the topf of every file
 
     # Pydantic schemas uses type annotations at runtime to generate the openapi
     # and do the validation. Putting the type annotation in a TYPE_CHECKING
