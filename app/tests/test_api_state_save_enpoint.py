@@ -154,6 +154,30 @@ from app.tests.conftest import MockGetItemFactory, MockPutItemFactory
             },
         },
         {
+            # dataset layer with a selected distribution
+            "state": {
+                "layers": [
+                    {
+                        "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                        "type": "dataset",
+                        "selectedDistributionId": "ch.bafu.neophyten-grossbluetiges_heusenkraut",
+                    }
+                ],
+            },
+        },
+        {
+            # dataset layer with a null selected distribution (preferred distribution is used)
+            "state": {
+                "layers": [
+                    {
+                        "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
+                        "type": "dataset",
+                        "selectedDistributionId": None,
+                    }
+                ],
+            },
+        },
+        {
             # state with one drawing layer
             "state": {
                 "map": {

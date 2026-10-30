@@ -84,7 +84,7 @@ class Settings(BaseSettings):
 # working cleanly with FastAPI dependency injection.
 @lru_cache
 def get_settings() -> Settings:  # pragma: no cover
-    return Settings()  # ty: ignore[missing-argument] for production we don't pass parameter we use environment variable
+    return Settings()
 
 
 SettingsDep = Annotated[

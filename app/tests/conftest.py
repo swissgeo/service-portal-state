@@ -108,7 +108,7 @@ def settings(moto_server: str) -> Settings:
         # Pydantic will automatically load any .env or .env.default file, so for testing to avoid
         # any different test result between CI and local environment (in which .env file can differ)
         # we make sure pydantic doesn't load the environment file with `_env_file=None`
-        _env_file=None,  # ty:ignore[unknown-argument]
+        _env_file=None,
         cors_origins=["http://test.com", "https://hello.com"],
         cors_origin_regex=r"http://localhost:\d+",
         aws_endpoint_url=moto_server,
@@ -221,6 +221,7 @@ def db_state_item_full(db_table: Table) -> tuple[dict, str]:
                     "isVisible": False,
                     "layerUrl": "https://services.swissgeo.ch/api/oar/v0/collections/swissgeo.catalog/items/ch.bafu.neophyten-grossbluetiges_heusenkraut?language=de",
                     "opacity": Decimal("0.75"),
+                    "selectedDistributionId": "ch.bafu.neophyten-grossbluetiges_heusenkraut",
                     "type": "dataset",
                 },
             ],

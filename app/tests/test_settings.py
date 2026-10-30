@@ -14,8 +14,8 @@ def test_defaults(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_REGION", "eu-west-1")
 
     settings = Settings(
-        _env_file=None,  # ty:ignore[unknown-argument]
-    )  # ty:ignore[missing-argument]
+        _env_file=None,
+    )
 
     assert settings.root_path == ""
     assert settings.cors_origins == []
@@ -30,8 +30,8 @@ def test_env_overrides_simple_values(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("ROOT_PATH", "/api")
 
     settings = Settings(
-        _env_file=None,  # ty:ignore[unknown-argument]
-    )  # ty:ignore[missing-argument]
+        _env_file=None,
+    )
 
     assert settings.root_path == "/api"
     assert settings.aws_dynamodb_table_name == "my-table"
@@ -46,8 +46,8 @@ def test_parse_list_from_comma_separated_string(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("CORS_HEADERS", "Authorization,Content-Type")
 
     settings = Settings(
-        _env_file=None,  # ty:ignore[unknown-argument]
-    )  # ty:ignore[missing-argument]
+        _env_file=None,
+    )
 
     assert settings.cors_origins == ["https://example.com", "http://localhost"]
     assert settings.cors_method == ["GET", "POST", "PUT"]
@@ -59,11 +59,11 @@ def test_parse_list_when_already_list(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("AWS_REGION", "eu-west-1")
 
     settings = Settings(
-        _env_file=None,  # ty:ignore[unknown-argument]
+        _env_file=None,
         cors_origins=["a.com", "b.com"],
         cors_method=["GET"],
         cors_headers=["X-Test"],
-    )  # ty:ignore[missing-argument]
+    )
 
     assert settings.cors_origins == ["a.com", "b.com"]
     assert settings.cors_method == ["GET"]
@@ -75,4 +75,4 @@ def test_missing_required_fields(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("AWS_DYNAMODB_TABLE_NAME", raising=False)
     monkeypatch.delenv("AWS_REGION", raising=False)
     with pytest.raises(ValidationError):
-        Settings(_env_file=None)  # ty:ignore[missing-argument, unknown-argument]
+        Settings(_env_file=None)
